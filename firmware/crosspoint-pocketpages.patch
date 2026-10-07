@@ -1,0 +1,200 @@
+diff --git a/lib/Epub/Epub/parsers/ChapterHtmlSlimParser.cpp b/lib/Epub/Epub/parsers/ChapterHtmlSlimParser.cpp
+index e379e57..479ddd8 100644
+--- a/lib/Epub/Epub/parsers/ChapterHtmlSlimParser.cpp
++++ b/lib/Epub/Epub/parsers/ChapterHtmlSlimParser.cpp
+@@ -233,6 +233,7 @@ void ChapterHtmlSlimParser::pushDecorationStyleEntry(const CssTextDecoration def
+ void ChapterHtmlSlimParser::updateEffectiveInlineStyle() {
+   // Start with block-level styles
+   effectiveBold = currentCssStyle.hasFontWeight() && currentCssStyle.fontWeight == CssFontWeight::Bold;
++  effectiveBoldExplicit = currentCssStyle.hasFontWeight();
+   effectiveItalic = currentCssStyle.hasFontStyle() && currentCssStyle.fontStyle == CssFontStyle::Italic;
+   effectiveTextDecoration =
+       currentCssStyle.hasTextDecoration() ? currentCssStyle.textDecoration : CssTextDecoration::None;
+@@ -254,6 +255,7 @@ void ChapterHtmlSlimParser::updateEffectiveInlineStyle() {
+   for (const auto& entry : inlineStyleStack) {
+     if (entry.hasBold) {
+       effectiveBold = entry.bold;
++      effectiveBoldExplicit = true;
+     }
+     if (entry.hasItalic) {
+       effectiveItalic = entry.italic;
+@@ -333,7 +335,9 @@ void ChapterHtmlSlimParser::flushPartWordBuffer() {
+   }
+ 
+   // Determine font style from depth-based tracking and CSS effective style
+-  const bool isBold = boldUntilDepth < depth || effectiveBold;
++  // An explicit CSS/inline weight wins over tag-implied bold, so a heading styled
++  // font-weight: normal renders regular. Without one, headings and <th> stay bold.
++  const bool isBold = effectiveBoldExplicit ? effectiveBold : (boldUntilDepth < depth || effectiveBold);
+   const bool isItalic = italicUntilDepth < depth || effectiveItalic;
+ 
+   // Combine style flags using bitwise OR
+diff --git a/lib/Epub/Epub/parsers/ChapterHtmlSlimParser.h b/lib/Epub/Epub/parsers/ChapterHtmlSlimParser.h
+index b1c5be5..0eca380 100644
+--- a/lib/Epub/Epub/parsers/ChapterHtmlSlimParser.h
++++ b/lib/Epub/Epub/parsers/ChapterHtmlSlimParser.h
+@@ -83,6 +83,9 @@ class ChapterHtmlSlimParser {
+   std::vector<BlockStyle> blockStyleStack;  // accumulated block styles from open ancestor elements
+   CssStyle currentCssStyle;
+   bool effectiveBold = false;
++  // True when CSS or an inline element explicitly set the weight (bold or normal).
++  // The innermost explicit weight then overrides tag-implied bold (e.g. headings).
++  bool effectiveBoldExplicit = false;
+   bool effectiveItalic = false;
+   CssTextDecoration effectiveTextDecoration = CssTextDecoration::None;
+   bool effectiveDirectionDefined = false;
+diff --git a/lib/I18n/translations/english.yaml b/lib/I18n/translations/english.yaml
+index 4567821..352f212 100644
+--- a/lib/I18n/translations/english.yaml
++++ b/lib/I18n/translations/english.yaml
+@@ -368,6 +368,7 @@ STR_OPDS_BROWSER: "OPDS Browser"
+ STR_SEARCH: "Search"
+ STR_COVER_CUSTOM: "Cover + Custom"
+ STR_QUICK_RESUME: "Quick Resume"
++STR_QUICK_RESUME_DARK: "Quick Resume (Dark)"
+ STR_TRANSPARENT: "Transparent"
+ STR_MENU_RECENT_BOOKS: "Recent Books"
+ STR_REMOVE_FROM_RECENTS: "Remove from Recents"
+diff --git a/src/CrossPointSettings.h b/src/CrossPointSettings.h
+index 73df56b..b984b5a 100644
+--- a/src/CrossPointSettings.h
++++ b/src/CrossPointSettings.h
+@@ -25,6 +25,7 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
+     BLANK = 5,
+     QUICK_RESUME = 6,
+     TRANSPARENT_CUSTOM = 7,
++    QUICK_RESUME_DARK = 8,
+     SLEEP_SCREEN_MODE_COUNT
+   };
+   enum SLEEP_SCREEN_COVER_MODE { FIT = 0, CROP = 1, SLEEP_SCREEN_COVER_MODE_COUNT };
+diff --git a/src/SettingsList.h b/src/SettingsList.h
+index 5171b64..380d22f 100644
+--- a/src/SettingsList.h
++++ b/src/SettingsList.h
+@@ -218,6 +218,7 @@ inline std::vector<SettingInfo> getSettingsList(const SdCardFontRegistry* regist
+     sleepScreenValues[CrossPointSettings::BLANK] = StrId::STR_NONE_OPT;
+     sleepScreenValues[CrossPointSettings::QUICK_RESUME] = StrId::STR_QUICK_RESUME;
+     sleepScreenValues[CrossPointSettings::TRANSPARENT_CUSTOM] = StrId::STR_TRANSPARENT;
++    sleepScreenValues[CrossPointSettings::QUICK_RESUME_DARK] = StrId::STR_QUICK_RESUME_DARK;
+ 
+     std::vector<StrId> statusBarClockValues(CrossPointSettings::STATUS_BAR_CLOCK_MODE_COUNT);
+     statusBarClockValues[CrossPointSettings::STATUS_BAR_CLOCK_HIDE] = StrId::STR_HIDE;
+diff --git a/src/activities/boot_sleep/SleepActivity.cpp b/src/activities/boot_sleep/SleepActivity.cpp
+index 8e6bd49..777de36 100644
+--- a/src/activities/boot_sleep/SleepActivity.cpp
++++ b/src/activities/boot_sleep/SleepActivity.cpp
+@@ -506,6 +506,7 @@ void SleepActivity::onEnter() {
+ 
+   const bool renderQuickResume =
+       SETTINGS.sleepScreen == CrossPointSettings::SLEEP_SCREEN_MODE::QUICK_RESUME ||
++      SETTINGS.sleepScreen == CrossPointSettings::SLEEP_SCREEN_MODE::QUICK_RESUME_DARK ||
+       (fromTimeout &&
+        SETTINGS.quickResumeSleepScreen == CrossPointSettings::QUICK_RESUME_SLEEP_SCREEN::QUICK_RESUME_AFTER_TIMEOUT);
+ 
+@@ -878,6 +879,18 @@ void SleepActivity::renderCoverSleepScreen() const {
+ void SleepActivity::renderLastScreenSleepScreen() const {
+   const auto pageHeight = renderer.getScreenHeight();
+   renderer.drawImage(MoonIcon, 0, pageHeight - MOONICON_HEIGHT, MOONICON_WIDTH, MOONICON_HEIGHT);
++  if (SETTINGS.sleepScreen == CrossPointSettings::SLEEP_SCREEN_MODE::QUICK_RESUME_DARK) {
++    // Quick Resume (Dark): keep the last page but flip its polarity, so sleeping is
++    // visibly different from reading. The moon was drawn first, so it inverts too.
++    // Every pixel changes, so use the sleep screens' half refresh rather than a fast differential one.
++    renderer.invertScreen();
++    if (gpio.deviceIsX3()) {
++      renderer.displayGrayscaleBase(HalDisplay::HALF_REFRESH);
++    } else {
++      renderer.displayBuffer(HalDisplay::HALF_REFRESH);
++    }
++    return;
++  }
+   // Only the moon differs from the displayed frame, so a differential FAST
+   // update adds it without the flashing clean pass (which sweeps the panel
+   // through the inverse — a full white flash on a night-mode page).
+diff --git a/src/activities/settings/SettingsActivity.cpp b/src/activities/settings/SettingsActivity.cpp
+index 7ddf0d5..72fafc4 100644
+--- a/src/activities/settings/SettingsActivity.cpp
++++ b/src/activities/settings/SettingsActivity.cpp
+@@ -465,7 +465,8 @@ void SettingsActivity::syncQuickResumeTimeoutForSleepScreen(bool sleepScreenChan
+     quickResumeTimeoutAutoEnabled = false;
+   }
+ 
+-  if (SETTINGS.sleepScreen == CrossPointSettings::SLEEP_SCREEN_MODE::QUICK_RESUME) {
++  if (SETTINGS.sleepScreen == CrossPointSettings::SLEEP_SCREEN_MODE::QUICK_RESUME ||
++      SETTINGS.sleepScreen == CrossPointSettings::SLEEP_SCREEN_MODE::QUICK_RESUME_DARK) {
+     if (SETTINGS.quickResumeSleepScreen != CrossPointSettings::QUICK_RESUME_SLEEP_SCREEN::QUICK_RESUME_AFTER_TIMEOUT) {
+       SETTINGS.quickResumeSleepScreen = CrossPointSettings::QUICK_RESUME_SLEEP_SCREEN::QUICK_RESUME_AFTER_TIMEOUT;
+       quickResumeTimeoutAutoEnabled = !preserveQuickResumeTimeoutOn;
+diff --git a/src/main.cpp b/src/main.cpp
+index c9094d4..745add2 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -265,6 +265,7 @@ void enterDeepSleep(bool fromTimeout = false) {
+ 
+   const bool isQuickResumeSleep =
+       SETTINGS.sleepScreen == CrossPointSettings::SLEEP_SCREEN_MODE::QUICK_RESUME ||
++      SETTINGS.sleepScreen == CrossPointSettings::SLEEP_SCREEN_MODE::QUICK_RESUME_DARK ||
+       (fromTimeout &&
+        SETTINGS.quickResumeSleepScreen == CrossPointSettings::QUICK_RESUME_SLEEP_SCREEN::QUICK_RESUME_AFTER_TIMEOUT);
+   // Every sleep mode leaves a complete retained frame on the e-ink panel. Keep
+diff --git a/test/chapter_html_slim_parser/ChapterHtmlSlimParserTest.cpp b/test/chapter_html_slim_parser/ChapterHtmlSlimParserTest.cpp
+index 2c66ecd..2ee870c 100644
+--- a/test/chapter_html_slim_parser/ChapterHtmlSlimParserTest.cpp
++++ b/test/chapter_html_slim_parser/ChapterHtmlSlimParserTest.cpp
+@@ -366,3 +366,57 @@ TEST(KoreanLayout, HangulGluedAcrossInlineStyleIsUnbreakable) {
+   const std::vector<std::vector<std::string>> expected{{"가나"}, {"한국", "어"}};
+   EXPECT_EQ(lines, expected);
+ }
++
++// Headings imply bold through depth tracking. An explicit CSS or inline weight
++// (font-weight: normal or bold) is more specific and must win, as in browsers.
++namespace {
++EpdFontFamily::Style flushWordAndGetStyle(ChapterHtmlSlimParser& parser, const char* word) {
++  parser.currentTextBlock = std::make_unique<ParsedText>(false);
++  strcpy(parser.partWordBuffer, word);
++  parser.partWordBufferIndex = static_cast<int>(strlen(word));
++  parser.flushPartWordBuffer();
++  return parser.currentTextBlock->getWordStyleAt(0);
++}
++}  // namespace
++
++TEST_F(ChapterHtmlSlimParserTest, HeadingTextIsBoldByDefault) {
++  parser.depth = 2;
++  parser.boldUntilDepth = 1;  // inside <h3>
++  parser.inlineStyleStack.clear();
++  parser.currentCssStyle = CssStyle();
++  parser.updateEffectiveInlineStyle();
++  EXPECT_TRUE(flushWordAndGetStyle(parser, "Pocket") & EpdFontFamily::BOLD);
++}
++
++TEST_F(ChapterHtmlSlimParserTest, HeadingSpanWithNormalWeightRendersRegular) {
++  parser.depth = 3;
++  parser.boldUntilDepth = 1;  // inside <h3><span style="font-weight: normal">
++  parser.currentCssStyle = CssStyle();
++  parser.inlineStyleStack.clear();
++  ChapterHtmlSlimParser::StyleStackEntry span;
++  span.depth = 2;
++  span.hasBold = true;
++  span.bold = false;
++  parser.inlineStyleStack.push_back(span);
++  parser.updateEffectiveInlineStyle();
++  EXPECT_FALSE(flushWordAndGetStyle(parser, "read") & EpdFontFamily::BOLD);
++}
++
++TEST_F(ChapterHtmlSlimParserTest, BoldTagInsideNormalSpanStaysBold) {
++  parser.depth = 4;
++  parser.boldUntilDepth = 1;  // <h3><span style="font-weight: normal"><b>
++  parser.currentCssStyle = CssStyle();
++  parser.inlineStyleStack.clear();
++  ChapterHtmlSlimParser::StyleStackEntry span;
++  span.depth = 2;
++  span.hasBold = true;
++  span.bold = false;
++  ChapterHtmlSlimParser::StyleStackEntry bold;
++  bold.depth = 3;
++  bold.hasBold = true;
++  bold.bold = true;
++  parser.inlineStyleStack.push_back(span);
++  parser.inlineStyleStack.push_back(bold);
++  parser.updateEffectiveInlineStyle();
++  EXPECT_TRUE(flushWordAndGetStyle(parser, "strong") & EpdFontFamily::BOLD);
++}

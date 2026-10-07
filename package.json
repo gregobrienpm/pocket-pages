@@ -1,0 +1,20 @@
+{
+  "name": "pocket-pages",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "esbuild": "^0.28.2",
+    "jszip": "^3.10.2",
+    "playwright": "^1.64.0"
+  }
+}
