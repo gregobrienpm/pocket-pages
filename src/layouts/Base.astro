@@ -1,0 +1,77 @@
+---
+import "../styles/global.css";
+import { GITHUB_URL, AUTHOR_URL } from "../site";
+interface Props { title?: string; description?: string; current?: "home" | "story" }
+const {
+  title = "Pocket Pages",
+  description = "Read a whole book six minutes at a time. Pocket Pages cuts an EPUB into short sessions for the Xteink X4 and CrossPoint, and your sleep screen shows what comes next.",
+  current = "home",
+} = Astro.props;
+const fullTitle = title === "Pocket Pages" ? "Pocket Pages: a book, six minutes at a time" : `${title} | Pocket Pages`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL("/og.png", Astro.site);
+---
+<!doctype html>
+<html lang="en-IE">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#dcddd6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#232527" media="(prefers-color-scheme: dark)" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <a class="skip visually-hidden" href="#main">Skip to content</a>
+    <header class="site-head wrap">
+      <a class="mark" href="/" aria-label="Pocket Pages home">
+        <span class="mark-rule" aria-hidden="true"></span>
+        <span>Pocket Pages</span>
+      </a>
+      <nav aria-label="Main">
+        <a href="/#convert">Convert</a>
+        <a href="/#classics">Classics</a>
+        <a href="/#set-up">Set up</a>
+        <a href="/story" aria-current={current === "story" ? "page" : undefined}>Story</a>
+      </nav>
+    </header>
+    <main id="main">
+      <slot />
+    </main>
+    <footer class="site-foot wrap">
+      <hr class="card-rule" />
+      <p class="small soft">
+        Pocket Pages is free and open source, with the code <a href={GITHUB_URL}>on GitHub</a>.
+        Books are converted in your browser and never uploaded.
+      </p>
+      <p class="small soft">
+        Made in Dublin by <a href={AUTHOR_URL}>Greg O'Brien</a>. Not affiliated with Xteink or the CrossPoint project.
+      </p>
+    </footer>
+  </body>
+</html>
+
+<style>
+  .skip:focus { position: fixed !important; top: 0.5rem; left: 0.5rem; width: auto; height: auto; clip: auto; padding: 0.5em 0.8em; background: var(--panel); z-index: 10; }
+  .site-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding-top: 1.25rem; padding-bottom: 1.25rem; flex-wrap: wrap;
+  }
+  .mark { display: inline-flex; flex-direction: column; align-items: center; gap: 0.3rem; color: var(--ink); text-decoration: none; font-weight: 650; font-size: 1.15rem; letter-spacing: -0.01em; }
+  .mark-rule { width: 2.2rem; height: 2px; background: var(--ink); }
+  .mark:hover { color: var(--ink); }
+  nav { display: flex; gap: clamp(0.9rem, 2.5vw, 1.8rem); flex-wrap: wrap; }
+  nav a { color: var(--ink); text-decoration: none; font-size: 1rem; padding: 0.2em 0; border-bottom: 1.5px solid transparent; }
+  nav a:hover { color: var(--biro); border-bottom-color: var(--biro); }
+  nav a[aria-current="page"] { border-bottom-color: var(--ink); }
+  .site-foot { padding-top: 3rem; padding-bottom: 3rem; display: grid; gap: 0.8rem; }
+  .site-foot p { margin: 0; max-width: var(--measure); }
+</style>

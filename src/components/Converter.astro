@@ -1,0 +1,155 @@
+---
+// Drop or choose an EPUB; it is converted in the browser and offered back as
+// a download. Nothing is uploaded.
+---
+<div class="converter" data-converter>
+  <form class="settings" data-settings>
+    <label>
+      <span>Session length</span>
+      <select name="minutes">
+        <option value="4">4 minutes</option>
+        <option value="6" selected>6 minutes</option>
+        <option value="8">8 minutes</option>
+        <option value="10">10 minutes</option>
+      </select>
+    </label>
+    <label>
+      <span>Reading speed</span>
+      <select name="wpm">
+        <option value="260" selected>Average, fiction (260 words a minute)</option>
+        <option value="238">Average, non-fiction (238 words a minute)</option>
+        <option value="200">Unhurried (200 words a minute)</option>
+        <option value="300">Quick (300 words a minute)</option>
+      </select>
+    </label>
+  </form>
+
+  <label class="drop" data-drop>
+    <input type="file" accept=".epub,application/epub+zip" class="visually-hidden" data-file />
+    <span class="drop-main">Choose an EPUB</span>
+    <span class="drop-sub small soft">or drop it here. Your book is converted on this device and never uploaded.</span>
+  </label>
+
+  <div class="status" data-status role="status" aria-live="polite"></div>
+
+  <div class="result" data-result hidden>
+    <h3 data-r-title></h3>
+    <p data-r-summary></p>
+    <p class="small soft" data-r-detail></p>
+    <p class="small warn" data-r-warn hidden></p>
+    <div class="actions">
+      <a class="button" data-r-download download>Download the Pocket Pages edition</a>
+      <button type="button" class="button quiet" data-r-again>Convert another book</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { convert } from "../lib/pocketpages.js";
+
+  const root = document.querySelector<HTMLElement>("[data-converter]")!;
+  const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
+  const input = $<HTMLInputElement>("[data-file]");
+  const drop = $<HTMLLabelElement>("[data-drop]");
+  const status = $<HTMLElement>("[data-status]");
+  const result = $<HTMLElement>("[data-result]");
+  const settings = $<HTMLFormElement>("[data-settings]");
+  let url: string | null = null;
+
+  const fileName = (title: string) =>
+    (title.replace(/[^\p{L}\p{N}]+/gu, " ").trim().replace(/\s+/g, "-") || "book") + "-pocket-pages.epub";
+
+  async function run(file: File) {
+    if (!/\.epub$/i.test(file.name) && file.type !== "application/epub+zip") {
+      showError("That file isn't an EPUB. Choose a file ending in .epub.");
+      return;
+    }
+    const minutes = Number((settings.elements.namedItem("minutes") as HTMLSelectElement).value);
+    const wpm = Number((settings.elements.namedItem("wpm") as HTMLSelectElement).value);
+    result.hidden = true;
+    root.classList.add("busy");
+    status.className = "status";
+    status.textContent = `Converting ${file.name}…`;
+    await new Promise((r) => setTimeout(r, 30)); // let the message paint
+    try {
+      const { epub, stats } = await convert(await file.arrayBuffer(), { minutes, wpm });
+      if (url) URL.revokeObjectURL(url);
+      url = URL.createObjectURL(new Blob([epub], { type: "application/epub+zip" }));
+      const a = $<HTMLAnchorElement>("[data-r-download]");
+      a.href = url;
+      a.download = fileName(stats.title);
+      $("[data-r-title]").textContent = stats.title;
+      $("[data-r-summary]").textContent =
+        `${stats.pockets} pockets of about ${minutes} minutes. One a day finishes it in about ${stats.weeks} week${stats.weeks === 1 ? "" : "s"}.`;
+      $("[data-r-detail]").textContent =
+        `Pockets run ${fmt(stats.minMinutes)} to ${fmt(stats.maxMinutes)} minutes, because each one ends at a chapter end or a scene break. ` +
+        `Chapters found from ${HOW[stats.how] ?? stats.how}.`;
+      const warn = $("[data-r-warn]");
+      warn.hidden = stats.complete;
+      warn.textContent = stats.complete ? "" :
+        `Only ${stats.keptWords.toLocaleString("en-IE")} of ${stats.sourceWords.toLocaleString("en-IE")} words were placed. Look through the book before relying on it.`;
+      status.textContent = "";
+      result.hidden = false;
+      a.focus();
+    } catch (err) {
+      showError(err instanceof Error ? err.message : String(err));
+    } finally {
+      root.classList.remove("busy");
+      input.value = "";
+    }
+  }
+  const HOW: Record<string, string> = {
+    "table of contents": "the book's table of contents",
+    "Gutenberg headings": "Project Gutenberg's chapter headings",
+    "headings found in the text": "chapter headings in the text",
+    "table of contents + headings found in the text": "the table of contents and chapter headings in the text",
+    "one section per file (no usable table of contents)": "the book's file layout, as it has no usable table of contents",
+  };
+  const fmt = (m: number) => (Math.round(m * 2) / 2).toString();
+  function showError(msg: string) {
+    status.className = "status error";
+    status.textContent = msg;
+  }
+
+  input.addEventListener("change", () => { if (input.files?.[0]) run(input.files[0]); });
+  for (const ev of ["dragenter", "dragover"]) drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); });
+  for (const ev of ["dragleave", "drop"]) drop.addEventListener(ev, () => drop.classList.remove("over"));
+  drop.addEventListener("drop", (e) => {
+    e.preventDefault();
+    const f = (e as DragEvent).dataTransfer?.files?.[0];
+    if (f) run(f);
+  });
+  $("[data-r-again]").addEventListener("click", () => { result.hidden = true; input.click(); });
+</script>
+
+<style>
+  .converter { display: grid; gap: 1.1rem; max-width: 40rem; }
+  .settings { display: flex; flex-wrap: wrap; gap: 0.9rem 1.4rem; }
+  .settings label { display: grid; gap: 0.25rem; font-size: var(--step--1); color: var(--ink-soft); }
+  select {
+    font: inherit; font-size: 1rem; color: var(--ink); background: var(--panel);
+    border: 1.5px solid var(--line); border-radius: 6px; padding: 0.45em 0.6em; max-width: 100%;
+  }
+  .drop {
+    display: grid; gap: 0.4rem; justify-items: start;
+    padding: clamp(1.4rem, 4vw, 2.2rem);
+    background: var(--panel); border: 1.5px solid var(--ink); border-radius: 10px;
+    cursor: pointer;
+  }
+  .drop-main {
+    font-weight: 620; font-size: var(--step-1);
+    color: var(--biro); text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 0.2em;
+  }
+  .drop:hover .drop-main { color: var(--biro-hover); }
+  .drop.over { border-color: var(--biro); border-width: 1.5px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--biro) 25%, transparent); }
+  .drop:focus-within { outline: 3px solid var(--biro); outline-offset: 3px; }
+  .busy .drop { opacity: 0.6; pointer-events: none; }
+  .status:empty { display: none; }
+  .status.error { color: var(--ink); border-left: 3px solid var(--ink); padding-left: 0.8rem; }
+  .result { display: grid; gap: 0.4rem; padding-top: 0.3rem; }
+  .result[hidden], .warn[hidden] { display: none; }
+  .result h3 { font-size: var(--step-2); }
+  .result p { margin: 0; }
+  .warn { border-left: 3px solid var(--ink); padding-left: 0.8rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 0.6rem; }
+</style>

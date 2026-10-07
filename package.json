@@ -1,20 +1,24 @@
 {
   "name": "pocket-pages",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "test": "test"
-  },
+  "description": "Read a book six minutes at a time: an EPUB converter for the Xteink X4 and CrossPoint.",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "test:parity": "node test/parity.mjs"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
+    "@fontsource-variable/literata": "^5.3.0",
+    "@fontsource/noto-sans": "^5.3.0",
+    "astro": "^7.3.7",
+    "jszip": "^3.10.2"
+  },
+  "private": true,
+  "type": "module",
+  "devDependencies": {
     "esbuild": "^0.28.2",
-    "jszip": "^3.10.2",
     "playwright": "^1.64.0"
   }
 }

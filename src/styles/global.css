@@ -1,0 +1,110 @@
+@import "@fontsource-variable/literata/wght.css";
+@import "@fontsource-variable/literata/wght-italic.css";
+@import "@fontsource/noto-sans/400.css";
+@import "@fontsource/noto-sans/400-italic.css";
+@import "@fontsource/noto-sans/700.css";
+
+/* Colour comes from the device: e-paper grey, e-ink (a dark grey, never pure
+   black), the grey of a ghosted page, and one accent: the blue biro of the
+   hand-drawn card sketches. Dark mode is the sleep screen. */
+:root {
+  --paper: #dcddd6;
+  --panel: #eeefea;
+  --ink: #26282a;
+  --ink-soft: #4f514e;
+  --ghost: #8b8d88;
+  --line: #b9bbb4;
+  --biro: #2b3a9e;
+  --biro-hover: #1d2878;
+  --on-biro: #eeefea;
+
+  --serif: "Literata Variable", "Literata", Georgia, serif;
+  --device-sans: "Noto Sans", system-ui, sans-serif;
+
+  /* scale: 1.25 (major third) from 18px body */
+  --step--1: 0.9rem;
+  --step-0: 1.125rem;
+  --step-1: 1.406rem;
+  --step-2: 1.758rem;
+  --step-3: clamp(2.1rem, 1.6rem + 2.2vw, 2.75rem);
+  --step-4: clamp(2.5rem, 1.7rem + 3.6vw, 3.6rem);
+
+  --measure: 36rem;
+  --gutter: clamp(1rem, 4vw, 2.5rem);
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #232527;
+    --panel: #2d3032;
+    --ink: #e2e3dd;
+    --ink-soft: #b4b6b0;
+    --ghost: #8b8d88;
+    --line: #45484a;
+    --biro: #a9b6ff;
+    --biro-hover: #c9d1ff;
+    --on-biro: #1c1e20;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #232527;
+  --panel: #2d3032;
+  --ink: #e2e3dd;
+  --ink-soft: #b4b6b0;
+  --ghost: #8b8d88;
+  --line: #45484a;
+  --biro: #a9b6ff;
+  --biro-hover: #c9d1ff;
+  --on-biro: #1c1e20;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: var(--step-0);
+  line-height: 1.62;
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+}
+img { max-width: 100%; height: auto; display: block; }
+
+h1, h2, h3 { font-weight: 620; line-height: 1.15; letter-spacing: -0.012em; margin: 0; text-wrap: balance; }
+h1 { font-size: var(--step-4); }
+h2 { font-size: var(--step-3); }
+h3 { font-size: var(--step-1); line-height: 1.3; }
+p { margin: 0 0 1em; text-wrap: pretty; }
+p:last-child { margin-bottom: 0; }
+
+a { color: var(--biro); text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+a:hover { color: var(--biro-hover); text-decoration-thickness: 2px; }
+:focus-visible { outline: 3px solid var(--biro); outline-offset: 3px; border-radius: 2px; }
+
+.wrap { max-width: 68rem; margin: 0 auto; padding: 0 var(--gutter); }
+.prose { max-width: var(--measure); }
+.soft { color: var(--ink-soft); }
+.small { font-size: var(--step--1); line-height: 1.5; }
+
+/* The one divider on the site: the short centred rule from the end card. */
+.card-rule { width: 4.5rem; height: 2px; border: 0; background: var(--ink); margin: 0; }
+
+.button {
+  display: inline-flex; align-items: center; gap: 0.5em;
+  font: inherit; font-size: 1rem; font-weight: 600;
+  padding: 0.7em 1.15em; border-radius: 6px; cursor: pointer;
+  border: 1.5px solid var(--biro); background: var(--biro); color: var(--on-biro);
+  text-decoration: none;
+}
+.button:hover { background: var(--biro-hover); border-color: var(--biro-hover); color: var(--on-biro); }
+.button.quiet { background: transparent; color: var(--biro); }
+.button.quiet:hover { background: color-mix(in srgb, var(--biro) 10%, transparent); color: var(--biro-hover); }
+
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-delay: 0ms !important; transition: none !important; }
+}

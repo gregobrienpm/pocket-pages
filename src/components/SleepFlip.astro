@@ -1,0 +1,123 @@
+---
+// The end card exactly as CrossPoint draws it, then the same card as a
+// Quick Resume (Dark) sleep screen. On load it does one e-ink refresh:
+// black, white, black, then the inverted card settles.
+---
+<figure class="flip" data-flip>
+  <div class="device" role="img" aria-label="An e-reader showing a Pocket Pages end card: Pocket 1 complete, 2% read. Up next: Pocket 2, 6 min read. Then the reader sleeps and the same card turns white on black.">
+    <div class="screen">
+      <div class="layer light" aria-hidden="true">
+        <div class="card">
+          <span class="r"></span>
+          <b>Pocket 1 complete</b>
+          <span>2% read</span>
+          <span class="r"></span>
+          <b>Up next: Pocket 2</b>
+          <span>6 min read</span>
+          <span class="r"></span>
+          <i>"When I came back to the front we still lived in that town."</i>
+        </div>
+        <div class="status"><span>94%</span><span>1. Chapter I (6 min)</span><span>1/1&nbsp;&nbsp;2%</span></div>
+      </div>
+      <div class="layer dark" aria-hidden="true">
+        <div class="card">
+          <span class="r"></span>
+          <b>Pocket 1 complete</b>
+          <span>2% read</span>
+          <span class="r"></span>
+          <b>Up next: Pocket 2</b>
+          <span>6 min read</span>
+          <span class="r"></span>
+          <i>"When I came back to the front we still lived in that town."</i>
+        </div>
+        <div class="status">
+          <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 3.2a8.6 8.6 0 1 0 5.3 13.3A7.2 7.2 0 0 1 15.5 3.2Z" fill="currentColor"/><path d="M19 3.5l.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3-1.3-.5 1.3-.5zM21.6 8.2l.3.8.8.3-.8.3-.3.8-.3-.8-.8-.3.8-.3z" fill="currentColor"/></svg>
+          <span>1. Chapter I (6 min)</span><span>1/1&nbsp;&nbsp;2%</span>
+        </div>
+      </div>
+      <div class="flash" aria-hidden="true"></div>
+    </div>
+  </div>
+  <figcaption class="small soft">
+    <span>Finish a pocket and the reader sleeps on what comes next.</span>
+    <button type="button" class="replay" data-replay>Play again</button>
+  </figcaption>
+</figure>
+
+<script>
+  for (const fig of document.querySelectorAll<HTMLElement>("[data-flip]")) {
+    const btn = fig.querySelector<HTMLButtonElement>("[data-replay]");
+    btn?.addEventListener("click", () => {
+      fig.classList.remove("go");
+      void fig.offsetWidth; // restart the CSS animation
+      fig.classList.add("go", "replayed");
+    });
+    fig.classList.add("go");
+  }
+</script>
+
+<style>
+  .flip { margin: 0; display: grid; justify-items: center; gap: 0.9rem; }
+  .device {
+    width: var(--device-w, 300px);
+    aspect-ratio: 480 / 800;
+    box-sizing: content-box;
+    padding: calc(var(--device-w, 300px) * 0.055) calc(var(--device-w, 300px) * 0.05) calc(var(--device-w, 300px) * 0.085);
+    background: #1f2123;
+    border-radius: calc(var(--device-w, 300px) * 0.075);
+    box-shadow: 0 1px 0 #3a3d40 inset, 0 18px 40px -18px rgb(20 22 24 / 0.55);
+  }
+  .screen {
+    position: relative; width: 100%; height: 100%; overflow: hidden;
+    container-type: inline-size; border-radius: 2px;
+    font-family: var(--device-sans);
+  }
+  .layer { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  .light { background: #eceee8; color: #2a2c2e; }
+  .dark { background: #2c2e30; color: #e9eae4; opacity: 0; }
+  .card {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding: 30% 7% 0; text-align: center; font-size: 5.2cqw; line-height: 1.45; gap: 1.2cqw;
+  }
+  .card b { font-weight: 700; }
+  .card i { font-style: italic; }
+  .r { width: 24cqw; height: 0.55cqw; background: currentColor; margin: 1.6cqw 0; }
+  .status {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 2.6cqw; padding: 0 3cqw 2.4cqw; gap: 2cqw;
+  }
+  .moon { width: 5.5cqw; height: 5.5cqw; }
+  .flash { position: absolute; inset: 0; background: #1b1c1d; opacity: 0; pointer-events: none; }
+
+  /* one e-ink full refresh, then the sleep screen settles */
+  .go .flash { animation: refresh 0.75s steps(1, end) 1.9s forwards; }
+  .go .dark { animation: settle 0.01s linear 2.62s forwards; }
+  .replayed .flash { animation-delay: 0.25s; }
+  .replayed .dark { animation-delay: 0.97s; }
+  @keyframes refresh {
+    0% { opacity: 1; background: #1b1c1d; }
+    30% { opacity: 1; background: #f1f2ee; }
+    55% { opacity: 1; background: #1b1c1d; }
+    100% { opacity: 0; }
+  }
+  @keyframes settle { to { opacity: 1; } }
+  .go .replay { animation: show 0s linear 2.7s forwards; }
+  @keyframes show { to { visibility: visible; } }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme="light"])) .device { box-shadow: 0 0 0 1px #4a4d50, 0 18px 40px -18px rgb(0 0 0 / 0.7); }
+  }
+
+  figcaption { display: flex; gap: 0.8rem; align-items: baseline; flex-wrap: wrap; justify-content: center; text-align: center; }
+  .replay {
+    visibility: hidden;
+    font: inherit; color: var(--biro); background: none; border: 0; padding: 0; cursor: pointer;
+    text-decoration: underline; text-underline-offset: 0.18em; text-decoration-thickness: 1px;
+  }
+  .replay:hover { color: var(--biro-hover); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dark { opacity: 1; }
+    .flash { display: none; }
+    .replay { display: none; }
+  }
+</style>

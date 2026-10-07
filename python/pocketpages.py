@@ -85,6 +85,10 @@ def text_of(el):
 # ----------------------------------------------------------------------------
 def read_epub(path):
     z = zipfile.ZipFile(path)
+    if "META-INF/encryption.xml" in z.namelist():  # DRM: encrypted text can't be read (obfuscated fonts are fine)
+        algs = re.findall(r'EncryptionMethod[^>]*Algorithm="([^"]+)"', z.read("META-INF/encryption.xml").decode("utf-8", "ignore"))
+        if any(a not in ("http://www.idpf.org/2008/embedding", "http://ns.adobe.com/pdf/enc#RC") for a in algs):
+            sys.exit("This book is DRM-protected, so it can't be converted.")
     container = etree.fromstring(z.read("META-INF/container.xml"))
     opf_path = container.find(".//{*}rootfile").get("full-path")
     base = os.path.dirname(opf_path)

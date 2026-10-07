@@ -72,6 +72,10 @@ function resolve(fromHref, link) {
 }
 const epubType = (el) => (el.getAttributeNS && el.getAttributeNS(OPS, "type")) || el.getAttribute("epub:type") || "";
 
+export class DrmError extends Error {
+  constructor() { super("This book is DRM-protected, so it can't be converted. Books from Standard Ebooks, Project Gutenberg and many independent shops are DRM-free."); this.name = "DrmError"; }
+}
+
 // ---------------------------------------------------------------------------
 // 1. Read the source EPUB
 // ---------------------------------------------------------------------------
@@ -92,6 +96,13 @@ const bodyOf = (doc) => byLocal(doc, "body")[0] || null;
 async function readEpub(buf) {
   const zip = await JSZip.loadAsync(buf);
   const read = async (p) => { const f = zip.file(p); return f ? f.async("string") : null; };
+  // DRM: encrypted text can't be read. (Obfuscated fonts are fine and common.)
+  const enc = await read("META-INF/encryption.xml");
+  if (enc) {
+    const algs = [...enc.matchAll(/EncryptionMethod[^>]*Algorithm="([^"]+)"/g)].map((m) => m[1]);
+    const fontOnly = (a) => a === "http://www.idpf.org/2008/embedding" || a === "http://ns.adobe.com/pdf/enc#RC";
+    if (algs.some((a) => !fontOnly(a))) throw new DrmError();
+  }
   const container = parseXml(await read("META-INF/container.xml"), { html: false });
   const opfPath = byLocal(container, "rootfile")[0].getAttribute("full-path");
   const base = dirname(opfPath);
@@ -775,7 +786,10 @@ const isGutenbergHtml = (src) =>
 export async function convert(input, { minutes = 6, wpm = 260, mode = "auto" } = {}) {
   FRAG.clear();
   let src;
-  try { src = await readEpub(input); } catch (err) { throw new Error("This doesn't look like an EPUB file we can read."); }
+  try { src = await readEpub(input); } catch (err) {
+    if (err instanceof DrmError) throw err;
+    throw new Error("This doesn't look like an EPUB file that can be read. Check it opens in another reader, then try again.");
+  }
   let how, front, chapters, back, frontLabels = [];
   let m = mode !== "auto" ? mode : (isGutenbergHtml(src) ? "headings" : "toc");
   if (m === "headings") {
