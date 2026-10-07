@@ -11,7 +11,7 @@ for (const [name, vw, vh, scheme, path, wait] of [
   const ctx = await b.newContext({ viewport: { width: vw, height: vh }, colorScheme: scheme, deviceScaleFactor: 1 });
   const p = await ctx.newPage();
   await p.goto("http://localhost:4321" + path, { waitUntil: "networkidle" });
-  await p.waitForTimeout(wait);
+  await p.evaluate(() => { for (const i of document.images) i.loading = "eager"; }); await p.waitForTimeout(wait);
   await p.screenshot({ path: `${out}/${name}.png`, fullPage: !name.includes("early") });
   await ctx.close();
 }
