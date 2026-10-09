@@ -670,7 +670,9 @@ hr.pp-rule { margin: 0.6em 0 1.2em 0; }
 async function writeEpub(src, front, pockets, back, minutes, wpm, frontLabelsIn) {
   const { title, author, lang } = src;
   let prettyTitle = title;
-  if (isLower(title) || isUpper(title)) {
+  // "A farewell to arms" (Gutenberg's sentence case) -> "A Farewell to Arms"; "iPhone Stories" left alone
+  const sentenceCase = title.split(/\s+/).length > 1 && /^\p{Lu}/u.test(title) && !/\p{Lu}/u.test(title.slice(1));
+  if (isLower(title) || isUpper(title) || sentenceCase) {
     const small = new Set(["a", "an", "to", "of", "the", "and", "in", "on", "or"]);
     prettyTitle = title.split(/\s+/).filter(Boolean).map((w, i) => (small.has(w.toLowerCase()) && i ? w.toLowerCase() : capitalize(w))).join(" ");
   }

@@ -805,7 +805,9 @@ hr.pp-rule { margin: 0.6em 0 1.2em 0; }
 def write_epub(src, front, pockets, back, out_path, minutes, wpm):
     title, author, lang = src["title"], src["author"], src["lang"]
     pretty_title = title
-    if title.islower() or title.isupper():  # "A farewell to arms" -> "A Farewell to Arms"; "iPhone" left alone
+    rest = title[1:]
+    sentence_case = len(title.split()) > 1 and title[:1].isupper() and not any(c.isupper() for c in rest)
+    if title.islower() or title.isupper() or sentence_case:  # "A farewell to arms" -> "A Farewell to Arms"; "iPhone Stories" left alone
         pretty_title = " ".join(w.lower() if w.lower() in ("a", "an", "to", "of", "the", "and", "in", "on", "or")
                                 and i else w.capitalize() for i, w in enumerate(title.split()))
     total_words = sum(p["words"] for p in pockets)
