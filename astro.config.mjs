@@ -1,8 +1,8 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 
-// Set `site` once the domain is bought (used for canonical URLs and social cards).
+// Canonical URLs and social cards. SITE_URL can override it (e.g. for a preview).
 export default defineConfig({
-  site: process.env.SITE_URL || "https://example.com",
+  site: process.env.SITE_URL || "https://readpocketpages.com",
   output: "static",
 });

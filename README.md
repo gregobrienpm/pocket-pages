@@ -40,7 +40,7 @@ Reading speeds default to Brysbaert (2019): 260 words a minute for fiction, 238 
 
 ## Deploy
 
-The site is static. On Vercel, import the repository; the Astro preset is detected automatically. Set the `SITE_URL` environment variable to the final domain (for canonical links and social cards), then add the domain in the project's settings.
+The site is static. On Vercel, import the repository; the Astro preset is detected automatically. The domain is readpocketpages.com (set in `astro.config.mjs`); add it in the Vercel project's Domains settings.
 
 ## Licence
 
