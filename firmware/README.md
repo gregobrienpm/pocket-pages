@@ -7,10 +7,16 @@ Pocket Pages works on standard [CrossPoint](https://crosspointreader.com). These
 
 `crosspoint-pocketpages.patch` applies to CrossPoint 1.6.5 (`git apply`).
 
-## Experimental build (X4 Pro only)
+## Experimental builds
 
-`crosspoint-1.6.5-pocketpages-x4pro.bin` is CrossPoint 1.6.5 with the patch, built for the **X4 Pro** (ESP32-S3).
-SHA-256: `6d24878a7d122dbe88453d0de10f6265915616f6d1d53fa72f627d143fd62709`
+CrossPoint 1.6.5 with the patch, one file per device family:
+
+| Reader | File | SHA-256 |
+| --- | --- | --- |
+| X3 and X4 (ESP32-C3) | `crosspoint-1.6.5-pocketpages-x3-x4.bin` | `4a3eb63cac126d6655a7513cbc0827dc9037cc45c30e95bbfc31a595c05b7091` |
+| X4 Pro (ESP32-S3) | `crosspoint-1.6.5-pocketpages-x4pro.bin` | `6d24878a7d122dbe88453d0de10f6265915616f6d1d53fa72f627d143fd62709` |
+
+The X3 and X4 build comes from the `Build firmware` GitHub Actions workflow in this repo, which applies the patch to the CrossPoint 1.6.5 tag and builds with CrossPoint's own release settings. It has not yet been tested on an X3 or X4.
 
 To install: copy it to the SD card and use **Settings › System › SD Card Firmware Update**. To go back, use the official [CrossPoint web flasher](https://crosspointreader.com/#flash-tools).
 This is unofficial and experimental. Use it at your own risk.
