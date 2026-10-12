@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -68,3 +68,25 @@ jobs:
           path: crosspoint-1.6.5-pocketpages-${{ matrix.device }}.bin
           if-no-files-found: error
           compression-level: 0
+
+  commit:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: crosspoint-*
+          merge-multiple: true
+      - name: Commit the builds to this branch
+        run: |
+          mkdir -p firmware/builds
+          cp dist/*.bin firmware/builds/
+          (cd firmware/builds && sha256sum *.bin > SHA256SUMS)
+          cat firmware/builds/SHA256SUMS
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add firmware/builds
+          git commit -m "Firmware builds from run ${{ github.run_id }} [skip ci]" || exit 0
+          git push
