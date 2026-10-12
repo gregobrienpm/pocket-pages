@@ -1,0 +1,70 @@
+name: Build firmware
+
+# Builds CrossPoint 1.6.5 with the Pocket Pages patch for each device family.
+# Runs on pushes to the firmware-build branch, or by hand.
+
+on:
+  push:
+    branches: [firmware-build]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - env: gh_release
+            device: x3-x4
+          - env: x4pro-gh_release
+            device: x4pro
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: pp
+      - uses: actions/checkout@v6
+        with:
+          repository: crosspoint-reader/crosspoint-reader
+          ref: "1.6.5"
+          path: cp
+          submodules: recursive
+      - name: Apply the Pocket Pages patch
+        working-directory: cp
+        run: git apply ../pp/firmware/crosspoint-pocketpages.patch
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          enable-cache: false
+      - name: Install PlatformIO Core
+        run: |
+          uv pip install --system -U https://github.com/pioarduino/platformio-core/archive/refs/tags/v6.1.19.zip
+          uv pip install --system -U "littlefs-python>=0.16.0" "fatfs-ng>=0.1.14" "pyyaml>=6.0.2" \
+            "rich-click>=1.8.6" "zopfli>=0.2.2" "intelhex>=2.3.0" "rich>=14.0.0" "urllib3<2" \
+            "cryptography>=45.0.3" "certifi>=2025.8.3" "ecdsa>=0.19.1" "bitstring>=4.3.1" \
+            "reedsolo>=1.5.3,<1.8" "esp-idf-size>=2.0.0" "esp-coredump>=1.14.0"
+      - name: Pin pioarduino core inside the platform penv
+        working-directory: cp
+        run: |
+          set -euo pipefail
+          pio pkg install -e "${{ matrix.env }}"
+          uv pip install --python ~/.platformio/penv/bin/python "pioarduino==6.1.19"
+      - name: Build
+        working-directory: cp
+        run: pio run -e "${{ matrix.env }}" -j1
+      - name: Name the firmware
+        run: |
+          cp "cp/.pio/build/${{ matrix.env }}/firmware.bin" "crosspoint-1.6.5-pocketpages-${{ matrix.device }}.bin"
+          sha256sum crosspoint-1.6.5-pocketpages-*.bin
+      - uses: actions/upload-artifact@v6
+        with:
+          name: crosspoint-1.6.5-pocketpages-${{ matrix.device }}
+          path: crosspoint-1.6.5-pocketpages-${{ matrix.device }}.bin
+          if-no-files-found: error
+          compression-level: 0
