@@ -73,8 +73,9 @@ function resolve(fromHref, link) {
 const epubType = (el) => (el.getAttributeNS && el.getAttributeNS(OPS, "type")) || el.getAttribute("epub:type") || "";
 
 export class DrmError extends Error {
-  constructor() { super("This book is DRM-protected, so it can't be converted. Books from Standard Ebooks, Project Gutenberg and many independent shops are DRM-free."); this.name = "DrmError"; }
+  constructor() { super("This book is DRM-protected, so it can't be converted. Books from Standard Ebooks, Project Gutenberg and many independent shops are DRM-free."); this.name = "DrmError"; this.code = "drm"; }
 }
+const unreadable = (msg) => Object.assign(new Error(msg), { code: "unreadable" });
 
 // ---------------------------------------------------------------------------
 // 1. Read the source EPUB
@@ -607,6 +608,17 @@ function makePockets(chapters, target) {
 // ---------------------------------------------------------------------------
 // 4. Write the new EPUB
 // ---------------------------------------------------------------------------
+// "Book 1 · Chapter III", "Letter IV, continued": the third line of the opening card.
+function whereOf(p) {
+  const firstCh = p.chapters[0];
+  let where;
+  if (p.piece && p.piece > 1) where = `${firstCh.label}, continued`;
+  else if (p.chapters.length > 1) where = p.label.replace(/, part \d+ of \d+/g, "");
+  else where = firstCh.label;
+  if (p.part) where = `${p.part} · ${where}`;
+  return where;
+}
+
 function firstSentence(pocket, maxWords = 22) {
   for (const [kind, el] of pocket.content) {
     if (kind === "block" && local(el) === "p" && words(el) > 3) {
@@ -707,12 +719,7 @@ async function writeEpub(src, front, pockets, back, minutes, wpm, frontLabelsIn)
   pockets.forEach((p, i0) => {
     const i = i0 + 1;
     const mins = Math.max(1, pyRound(p.words / wpm));
-    const firstCh = p.chapters[0];
-    let where;
-    if (p.piece && p.piece > 1) where = `${firstCh.label}, continued`;
-    else if (p.chapters.length > 1) where = p.label.replace(/, part \d+ of \d+/g, "");
-    else where = firstCh.label;
-    if (p.part) where = `${p.part} · ${where}`;
+    const where = whereOf(p);
     const head = `<hr class="pp-open-top"/>` + H(`Pocket ${i} of ${N}`) + H(soft(`${mins} min read`)) + H(soft(where)) + `<hr class="pp-open-end"/>`;
     const parts = [];
     let skippedFirst = false;
@@ -777,6 +784,42 @@ async function writeEpub(src, front, pockets, back, minutes, wpm, frontLabelsIn)
   return { bytes, N, totalWords, prettyTitle };
 }
 
+/**
+ * What the reader will show for the first few pockets: each pocket's opening
+ * card with its first lines, and its end card. Same wording and numbers as the
+ * EPUB itself. Page counts are estimates (CrossPoint marks those with "~" too).
+ */
+function previewOf(pockets, totalWords, wpm, count) {
+  const N = pockets.length, WORDS_PER_PAGE = 120;
+  const out = [];
+  let done = 0;
+  for (let k = 0; k < Math.min(count, N); k++) {
+    const p = pockets[k], i = k + 1;
+    const mins = Math.max(1, pyRound(p.words / wpm));
+    const pages = Math.max(1, Math.round(p.words / WORDS_PER_PAGE));
+    const startPct = pyRound((done / totalWords) * 100);
+    done += p.words;
+    const pct = pyRound((done / totalWords) * 100);
+    const body = [];
+    let budget = 110;
+    for (const [kind, el] of p.content) {
+      if (kind !== "block" || !words(el) || budget <= 0) continue;
+      const w = textOf(el).split(" ");
+      body.push(w.length > budget ? w.slice(0, budget).join(" ") : w.join(" "));
+      budget -= w.length;
+    }
+    const status = `${i}. ${latin1(p.label)} (${mins} min)`;
+    out.push({ kind: "open", pocket: `Pocket ${i} of ${N}`, mins: `${mins} min read`, where: latin1(whereOf(p)),
+      body, status, page: `~1/${pages}`, pct: `${startPct}%` });
+    const nxt = pockets[i];
+    out.push(nxt
+      ? { kind: "end", complete: `Pocket ${i} complete`, read: `${pct}% read`, next: `Up next: Pocket ${i + 1}`,
+          nextMins: `${Math.max(1, pyRound(nxt.words / wpm))} min read`, quote: (() => { const h = firstSentence(nxt, 16); return h ? `"${latin1(h)}"` : ""; })(), status, page: "1/1", pct: `${pct}%` }
+      : { kind: "end", complete: "Finished", read: `${N} pockets`, next: "Well read.", nextMins: "", quote: "", status, page: "1/1", pct: "100%" });
+  }
+  return out;
+}
+
 const isGutenbergHtml = (src) =>
   src.ident.toLowerCase().includes("gutenberg") &&
   src.docs.reduce((s, { doc }) => s + byLocal(doc, "h2").length, 0) >= 3;
@@ -790,7 +833,7 @@ export async function convert(input, { minutes = 6, wpm = 260, mode = "auto" } =
   let src;
   try { src = await readEpub(input); } catch (err) {
     if (err instanceof DrmError) throw err;
-    throw new Error("This doesn't look like an EPUB file that can be read. Check it opens in another reader, then try again.");
+    throw unreadable("This doesn't look like an EPUB file that can be read. Check it opens in another reader, then try again.");
   }
   let how, front, chapters, back, frontLabels = [];
   let m = mode !== "auto" ? mode : (isGutenbergHtml(src) ? "headings" : "toc");
@@ -801,11 +844,11 @@ export async function convert(input, { minutes = 6, wpm = 260, mode = "auto" } =
   }
   if (m === "toc") {
     const st = buildStructureToc(src);
-    if (!st) throw new Error("Couldn't find the story in this EPUB (no table of contents or readable text).");
+    if (!st) throw unreadable("Couldn't find the story in this EPUB (no table of contents or readable text).");
     ({ front, chapters, back, frontLabels } = st);
     how = { toc: "table of contents", spine: "one section per file (no usable table of contents)" }[st.source] || st.source;
   }
-  if (!chapters.length) throw new Error("Couldn't find any chapters in this EPUB.");
+  if (!chapters.length) throw unreadable("Couldn't find any chapters in this EPUB.");
   const target = minutes * wpm;
   const pockets = makePockets(chapters, target);
   const { bytes, N, totalWords, prettyTitle } = await writeEpub(src, front, pockets, back, Math.trunc(minutes), wpm, frontLabels);
@@ -825,6 +868,7 @@ export async function convert(input, { minutes = 6, wpm = 260, mode = "auto" } =
       complete: kept + heads >= srcWords * 0.98, keptWords: kept, sourceWords: srcWords,
       frontWords: front.reduce((s, x) => s + words(x), 0), backWords: back.reduce((s, x) => s + words(x), 0),
       list: pockets.map((p) => ({ label: p.label, part: p.part, words: p.words, first: firstText(p) })),
+      preview: previewOf(pockets, totalWords, wpm, 3),
     },
   };
 }

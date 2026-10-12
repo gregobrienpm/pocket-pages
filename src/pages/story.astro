@@ -1,189 +1,118 @@
 ---
 import Base from "../layouts/Base.astro";
-import { GITHUB_URL } from "../site";
+import Device from "../components/Device.astro";
+import { SAMPLE_OPEN } from "../lib/device.js";
+import { GITHUB_URL, CROSSPOINT_URL } from "../site";
 ---
 <Base title="The story" current="story"
   description="Why Pocket Pages cuts books into six-minute sessions, what e-ink readers said, and how the end card went from a biro sketch to a sleep screen.">
-  <article class="wrap story">
-    <header class="prose">
-      <h1>Short sessions, on purpose</h1>
-      <p class="lead">
-        I bought an Xteink X4 Pro, an e-ink reader about the size of a phone, and wanted to build
-        something genuinely useful for it. Before building anything, I spent a few days reading what
-        owners say about these devices on Reddit, YouTube and GitHub.
-      </p>
-    </header>
+  <div class="wrap">
+    <article class="story">
+      <header class="col head">
+        <span class="kicker soft">The story</span>
+        <h1>Short sessions, on purpose</h1>
+        <p class="lead">I bought an Xteink X4 Pro, an e-ink reader about the size of a phone, and wanted to build something genuinely useful for it. Before building anything, I spent a few days reading what owners say about these devices on Reddit, YouTube and GitHub.</p>
+      </header>
 
-    <section class="prose">
-      <h2>What I heard</h2>
-      <p>
-        <strong>People use these readers to fill the gaps they used to scroll through:</strong> queues,
-        commutes, walks with the dog, work breaks. One owner wrote that she'd read more in a month
-        than in the three before it, simply because the reader was always in her pocket.
-      </p>
-      <p>
-        <strong>Long chapters stop people starting.</strong> The comment that stayed with me was from
-        a reader who wouldn't begin a chapter if they could see they wouldn't finish it in the time they had.
-        Nobody was solving that.
-      </p>
-      <p>
-        <strong>The sleep screen is the most loved part of the device.</strong> The liveliest threads
-        were about what people put on it: football fixtures, calendars, wallpapers, even a small
-        character that lives there.
-      </p>
-      <p>
-        <strong>Reading doesn't have to be productive.</strong> A comment saying exactly that drew over
-        a hundred likes. Anything I built had to be free of streaks, counters and guilt.
-      </p>
-      <p class="soft small">
-        These come from 11 Reddit threads, comments on 10 YouTube videos, and CrossPoint's GitHub issues
-        and discussions, read in October 2026. They're what owners said, not a survey.
-      </p>
-    </section>
+      <section class="col">
+        <div class="sec-head"><h2>What I heard</h2><span class="folio">1</span></div>
+        <p><strong>People use these readers to fill the gaps they used to scroll through:</strong> queues, commutes, walks with the dog, work breaks. One owner wrote that she'd read more in a month than in the three before it, simply because the reader was always in her pocket.</p>
+        <p><strong>Long chapters stop people starting.</strong> The comment that stayed with me was from a reader who wouldn't begin a chapter if they could see they wouldn't finish it in the time they had. Nobody was solving that.</p>
+        <p><strong>The sleep screen is the most loved part of the device.</strong> The liveliest threads were about what people put on it: football fixtures, calendars, wallpapers, even a small character that lives there.</p>
+        <p><strong>Reading doesn't have to be productive.</strong> A comment saying exactly that drew over a hundred likes. Anything I built had to be free of streaks, counters and guilt.</p>
+        <p class="small soft">These come from 11 Reddit threads, comments on 10 YouTube videos, and CrossPoint's GitHub issues and discussions, read in October 2026. They're what owners said, not a survey.</p>
+      </section>
 
-    <section class="prose">
-      <h2>Why six minutes</h2>
-      <p>
-        The case is arithmetic. Adults read silently at about 260 words a minute for fiction and 238 for
-        non-fiction (Brysbaert, 2019). Six minutes at 260 words a minute is about 1,560 words a day, or
-        roughly 570,000 a year. That's five or six average-length novels from a habit small enough to keep
-        on a bad day.
-      </p>
-      <p>
-        The number six came from somewhere less rigorous, and it's worth being honest about. A widely
-        reported 2009 study by Mindlab International, commissioned by a chocolate brand, claimed six
-        minutes of reading cut stress by 68%. It was commercial research and was never peer-reviewed,
-        so I treat it as an inspiration rather than as evidence. Pocket Pages doesn't promise calm. It
-        offers a short, finite thing to do instead of an endless one.
-      </p>
-      <p>
-        You can choose 4, 8 or 10 minutes in the converter if six doesn't suit.
-      </p>
-    </section>
+      <section class="col">
+        <div class="sec-head"><h2>Why six minutes</h2><span class="folio">2</span></div>
+        <p>The case is arithmetic. Adults read silently at about 260 words a minute for fiction and 238 for non-fiction (Brysbaert, 2019). Six minutes at 260 words a minute is about 1,560 words a day, or roughly 570,000 a year. That's five or six average-length novels from a habit small enough to keep on a bad day.</p>
+        <p>The number six came from somewhere less rigorous, and it's worth being honest about. A widely reported 2009 study by Mindlab International, commissioned by a chocolate brand, claimed six minutes of reading cut stress by 68%. It was commercial research and was never peer-reviewed, so I treat it as an inspiration rather than as evidence. Pocket Pages doesn't promise calm. It offers a short, finite thing to do instead of an endless one.</p>
+        <p>You can choose 4, 8 or 10 minutes in the converter if six doesn't suit.</p>
+      </section>
 
-    <section class="prose">
-      <h2>Missing a day is fine</h2>
-      <p>
-        In a study following people forming new daily habits, missing a single day did not materially
-        affect how the habit formed (Lally et al., 2010). So Pocket Pages has no streaks and no dates.
-        That also suits the hardware: the X4 has no clock that survives sleep, so the next pocket moves on
-        when you finish one, not when a day passes. Miss a week and the end card is still there,
-        showing the same next pocket.
-      </p>
-    </section>
+      <section class="col">
+        <div class="sec-head"><h2>Missing a day is fine</h2><span class="folio">3</span></div>
+        <p>In a study following people forming new daily habits, missing a single day did not materially affect how the habit formed (Lally et al., 2010). So Pocket Pages has no streaks and no dates. That also suits the hardware: Xteink readers have no clock that survives sleep, so the next pocket moves on when you finish one, not when a day passes. Miss a week and the end card is still there, showing the same next pocket.</p>
+      </section>
 
-    <section class="sketches">
-      <div class="prose">
-        <h2>From sketch to screen</h2>
-        <p>
-          The end card started as a biro sketch, and the first version on the device spilled onto two
-          pages. A dark image card came next, but it looked the same awake or asleep, so it never felt
-          like the reader had switched off. What I wanted was a flip: a light card while you're reading,
-          then white on black when the reader sleeps. That needed a small change to the reader's firmware.
-        </p>
-      </div>
-      <div class="pairs">
-        <figure>
-          <img src="/img/sketch-endcard.webp" width="720" height="960" loading="lazy" decoding="async"
-            alt="Biro sketch of the end card: Pocket 1 complete, 1% read, Up next Pocket 2, 6 min read, and the next pocket's first line." />
-          <figcaption class="small soft">The sketch</figcaption>
-        </figure>
-        <figure>
-          <img src="/img/device-endcard.webp" width="645" height="960" loading="lazy" decoding="async"
-            alt="The finished end card on the reader, matching the sketch's layout." />
-          <figcaption class="small soft">On the reader</figcaption>
-        </figure>
-        <figure>
-          <img src="/img/device-sleep.webp" width="618" height="960" loading="lazy" decoding="async"
-            alt="The same card as a sleep screen, white text on a dark screen." />
-          <figcaption class="small soft">Asleep</figcaption>
-        </figure>
-      </div>
-      <div class="prose">
-        <p>
-          The card at the start of each pocket followed the same way. It first opened with a line
-          quoting the end of the previous session, which turned out to be confusing out of context.
-          It now mirrors the end card instead, so every session opens and closes in the same frame.
-        </p>
-      </div>
-      <div class="pairs two">
-        <figure>
-          <img src="/img/sketch-opener.webp" width="720" height="845" loading="lazy" decoding="async"
-            alt="Biro sketch of the opening card: Pocket 2, 6 min read, 2 of 62, between two rules." />
-          <figcaption class="small soft">The sketch</figcaption>
-        </figure>
-        <figure>
-          <img src="/img/device-opener.webp" width="617" height="960" loading="lazy" decoding="async"
-            alt="The opening card on the reader: Pocket 2 of 61, 6 min read, Book 1, Chapter III, with the chapter text below." />
-          <figcaption class="small soft">On the reader</figcaption>
-        </figure>
-      </div>
-    </section>
+      <section class="wide">
+        <div class="col">
+          <div class="sec-head"><h2>From sketch to screen</h2><span class="folio">4</span></div>
+          <p>The end card started as a biro sketch, and the first version on the device spilled onto two pages. A dark image card came next, but it looked the same awake or asleep, so it never felt like the reader had switched off. What I wanted was a flip: a light card while you're reading, then white on black when the reader sleeps. That needed a small change to the reader's firmware.</p>
+        </div>
+        <div class="figs three">
+          <figure>
+            <div class="frame photo"><img src="/img/sketch-endcard.webp" width="720" height="960" loading="lazy" alt="Biro sketch of the end card: Pocket 1 complete, 1% read, Up next Pocket 2, 6 min read, and the next pocket's first line." /></div>
+            <figcaption>The sketch</figcaption>
+          </figure>
+          <figure>
+            <div class="frame"><Device view="end" /></div>
+            <figcaption>On the reader</figcaption>
+          </figure>
+          <figure>
+            <div class="frame"><Device view="sleep" /></div>
+            <figcaption>Asleep</figcaption>
+          </figure>
+        </div>
+        <div class="col">
+          <p>The card at the start of each pocket followed the same way. It first opened with a line quoting the end of the previous session, which turned out to be confusing out of context. It now mirrors the end card instead, so every session opens and closes in the same frame.</p>
+        </div>
+        <div class="figs two">
+          <figure>
+            <div class="frame photo"><img src="/img/sketch-opener.webp" width="720" height="845" loading="lazy" alt="Biro sketch of the opening card: Pocket 2, 6 min read, 2 of 62, between two rules." /></div>
+            <figcaption>The sketch</figcaption>
+          </figure>
+          <figure>
+            <div class="frame"><Device view="open" card={SAMPLE_OPEN} /></div>
+            <figcaption>On the reader</figcaption>
+          </figure>
+        </div>
+      </section>
 
-    <section class="prose">
-      <h2>How it's built</h2>
-      <p>
-        <strong>The converter</strong> reads the book's own table of contents, falls back to chapter
-        headings in the text when there isn't a useful one, and keeps front and back matter out of the pockets.
-        It cuts at chapter ends first, then scene breaks, then paragraph ends, choosing every cut in a chapter
-        together so pockets stay close to the length you asked for. Very short chapters are merged.
-        Nothing is cut mid-paragraph.
-      </p>
-      <p>
-        It runs in your browser, so your books are never uploaded. The same logic also exists as a
-        Python script. Both versions were run on nine test books, from tidy Standard Ebooks editions to
-        messy Calibre-style and shop-style files, and cut every book at exactly the same places. Every
-        paragraph of each source ends up in the output once, in order.
-      </p>
-      <p>
-        <strong>The firmware changes</strong> are two small additions to
-        <a href="https://crosspointreader.com">CrossPoint</a>: a Quick Resume (Dark) sleep screen that
-        inverts the page you stopped on, and a fix so headings can be regular weight when a book asks for it.
-        Pocket Pages works without them; they make the end card look as intended.
-      </p>
-      <p>
-        Everything is open source on <a href={GITHUB_URL}>GitHub</a>.
-      </p>
-    </section>
+      <section class="col">
+        <div class="sec-head"><h2>How it's built</h2><span class="folio">5</span></div>
+        <p><strong>The converter</strong> reads the book's own table of contents, falls back to chapter headings in the text when there isn't a useful one, and keeps front and back matter out of the pockets. It cuts at chapter ends first, then scene breaks, then paragraph ends, choosing every cut in a chapter together so pockets stay close to the length you asked for. Very short chapters are merged. Nothing is cut mid-paragraph.</p>
+        <p>It runs in your browser, so your books are never uploaded. The same logic also exists as a Python script. Both versions were run on nine test books, from tidy Standard Ebooks editions to messy Calibre-style and shop-style files, and cut every book at exactly the same places. Every paragraph of each source ends up in the output once, in order.</p>
+        <p><strong>The firmware changes</strong> are two small additions to <a href={CROSSPOINT_URL}>CrossPoint</a>: a Quick Resume (Dark) sleep screen that inverts the page you stopped on, and a fix so headings can be regular weight when a book asks for it. Pocket Pages works without them; they make the end card look as intended.</p>
+        <p>Everything is open source on <a href={GITHUB_URL}>GitHub</a>.</p>
+      </section>
 
-    <section class="prose sources">
-      <h2>Sources</h2>
-      <ul class="small">
-        <li>
-          Brysbaert, M. (2019) 'How many words do we read per minute? A review and meta-analysis of reading rate',
-          <i>Journal of Memory and Language</i>, 109, 104047.
-          <a href="https://doi.org/10.1016/j.jml.2019.104047">doi:10.1016/j.jml.2019.104047</a>
-        </li>
-        <li>
-          Lally, P., van Jaarsveld, C.H.M., Potts, H.W.W. and Wardle, J. (2010) 'How are habits formed:
-          Modelling habit formation in the real world', <i>European Journal of Social Psychology</i>, 40(6), pp. 998–1009.
-          <a href="https://doi.org/10.1002/ejsp.674">doi:10.1002/ejsp.674</a>
-        </li>
-        <li>
-          Mindlab International (2009) reading and stress study, commissioned by Galaxy chocolate and widely reported
-          in the UK press. Not peer-reviewed; cited here as background, not evidence.
-        </li>
-        <li>
-          Book texts: <a href="https://standardebooks.org">Standard Ebooks</a> (public domain) and
-          <a href="https://www.gutenberg.org">Project Gutenberg</a>.
-        </li>
-      </ul>
-    </section>
-  </article>
+      <section class="col">
+        <div class="sec-head"><h2>Sources</h2><span class="folio">6</span></div>
+        <ul class="sources">
+          <li>Brysbaert, M. (2019) 'How many words do we read per minute? A review and meta-analysis of reading rate', <em>Journal of Memory and Language</em>, 109, 104047. <a href="https://doi.org/10.1016/j.jml.2019.104047">doi:10.1016/j.jml.2019.104047</a></li>
+          <li>Lally, P., van Jaarsveld, C.H.M., Potts, H.W.W. and Wardle, J. (2010) 'How are habits formed: Modelling habit formation in the real world', <em>European Journal of Social Psychology</em>, 40(6), pp. 998–1009. <a href="https://doi.org/10.1002/ejsp.674">doi:10.1002/ejsp.674</a></li>
+          <li>Mindlab International (2009) reading and stress study, commissioned by Galaxy chocolate and widely reported in the UK press. Not peer-reviewed; cited here as background, not evidence.</li>
+          <li>Book texts: <a href="https://standardebooks.org">Standard Ebooks</a> (public domain) and <a href="https://www.gutenberg.org">Project Gutenberg</a>.</li>
+        </ul>
+      </section>
+
+      <span class="end-rule" aria-hidden="true"></span>
+    </article>
+  </div>
 </Base>
 
 <style>
-  .story { display: grid; gap: clamp(2.8rem, 6vw, 4.2rem); padding-top: clamp(1.5rem, 5vw, 3.5rem); padding-bottom: 2rem; }
-  .story h1 { margin-bottom: 1.2rem; }
-  .story h2 { font-size: var(--step-2); margin-bottom: 0.9rem; }
-  .lead { font-size: var(--step-1); line-height: 1.5; }
-  .sketches { display: grid; gap: 1.6rem; }
-  .pairs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(0.8rem, 2.5vw, 1.6rem); max-width: 54rem; }
-  .pairs.two { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 36rem; }
-  .pairs figure { margin: 0; display: grid; gap: 0.5rem; }
-  .pairs img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 8px; }
-  .sources ul { padding-left: 1.1rem; display: grid; gap: 0.7rem; }
-  @media (max-width: 560px) {
-    .pairs { grid-template-columns: 1fr 1fr; }
-  }
+  .story { max-width: 1040px; margin: 0 auto; padding: clamp(56px, 8vw, 120px) 0 clamp(72px, 9vw, 136px); display: flex; flex-direction: column; gap: clamp(56px, 6vw, 88px); line-height: 1.65; }
+  .col { max-width: 680px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  .head { gap: 28px; }
+  .kicker { font-size: 16px; }
+  .story h1 { font-size: clamp(46px, 6vw, 88px); line-height: 0.98; letter-spacing: -0.022em; font-variation-settings: "opsz" 72; }
+  .lead { font-size: clamp(20px, 1.7vw, 23px); line-height: 1.55; }
+  .story .sec-head { padding-top: 18px; margin-bottom: 6px; }
+  .story .sec-head h2 { font-size: clamp(30px, 3vw, 40px); line-height: 1.1; letter-spacing: -0.01em; }
+  .story strong { font-weight: 600; }
+  .small { font-size: 16px; line-height: 1.6; }
+  .wide { width: 100%; display: flex; flex-direction: column; gap: clamp(36px, 4vw, 56px); }
+  .figs { display: grid; gap: 28px clamp(16px, 2vw, 28px); width: 100%; margin: 0 auto; }
+  .figs.three { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .figs.two { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); max-width: 820px; }
+  figure { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+  figcaption { font-size: 16px; font-style: italic; color: var(--gr); }
+  .frame { aspect-ratio: 4 / 5; background: var(--pr); border: 1px solid var(--fr); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .frame :global(.pd) { width: 52%; }
+  .frame.photo img { width: 100%; height: 100%; object-fit: cover; }
+  .sources { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; font-size: 16px; line-height: 1.55; }
+  .sources li { padding-left: 1.4em; text-indent: -1.4em; }
+  .end-rule { width: 40px; height: 2px; background: var(--ik); align-self: center; }
 </style>

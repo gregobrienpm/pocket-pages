@@ -4,12 +4,13 @@ import { GITHUB_URL, AUTHOR_URL } from "../site";
 interface Props { title?: string; description?: string; current?: "home" | "story" }
 const {
   title = "Pocket Pages",
-  description = "Read a whole book six minutes at a time. Pocket Pages cuts an EPUB into short sessions for the Xteink X4 and CrossPoint, and your sleep screen shows what comes next.",
+  description = "Read a whole book six minutes at a time. Pocket Pages cuts an EPUB into short sessions for Xteink readers running CrossPoint, and the sleep screen shows what comes next.",
   current = "home",
 } = Astro.props;
-const fullTitle = title === "Pocket Pages" ? "Pocket Pages: a book, six minutes at a time" : `${title} | Pocket Pages`;
+const fullTitle = title === "Pocket Pages" ? "Pocket Pages: a whole book, six minutes at a time" : `${title} | Pocket Pages`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL("/og.png", Astro.site);
+const home = current === "home" ? "" : "/";
 ---
 <!doctype html>
 <html lang="en-IE">
@@ -20,58 +21,102 @@ const ogImage = new URL("/og.png", Astro.site);
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <meta name="theme-color" content="#dcddd6" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#232527" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#e4e5e0" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
     <meta name="twitter:card" content="summary_large_image" />
+    <script is:inline>
+      // Start asleep if the visitor chose it before, or their device prefers dark.
+      (function () {
+        var s = null;
+        try { s = localStorage.getItem("pp-sleep"); } catch (e) {}
+        var dark = s === null ? window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches : s === "1";
+        if (dark) document.documentElement.dataset.sleep = "1";
+      })();
+    </script>
   </head>
   <body>
     <a class="skip visually-hidden" href="#main">Skip to content</a>
-    <header class="site-head wrap">
-      <a class="mark" href="/" aria-label="Pocket Pages home">
-        <span class="mark-rule" aria-hidden="true"></span>
-        <span>Pocket Pages</span>
-      </a>
-      <nav aria-label="Main">
-        <a href="/#convert">Convert</a>
-        <a href="/#classics">Classics</a>
-        <a href="/#set-up">Set up</a>
-        <a href="/story" aria-current={current === "story" ? "page" : undefined}>Story</a>
-      </nav>
-    </header>
+    <div class="wrap">
+      <header class="site-head">
+        <a class="mark" href="/" aria-label="Pocket Pages, home">
+          <span class="mark-rule" aria-hidden="true"></span>
+          <span>Pocket Pages</span>
+        </a>
+        <nav aria-label="Main">
+          <a href={`${home}#convert`}>Convert</a>
+          <a href={`${home}#classics`}>Classics</a>
+          <a href={`${home}#set-up`}>Set up</a>
+          <a href="/story" aria-current={current === "story" ? "page" : undefined}>Story</a>
+          <button type="button" class="moon" data-moon aria-pressed="false" aria-label="Put the page to sleep" title="Put the page to sleep">
+            <span aria-hidden="true"></span>
+          </button>
+        </nav>
+      </header>
+    </div>
     <main id="main">
       <slot />
     </main>
-    <footer class="site-foot wrap">
-      <hr class="card-rule" />
-      <p class="small soft">
-        Pocket Pages is free and open source, with the code <a href={GITHUB_URL}>on GitHub</a>.
-        Books are converted in your browser and never uploaded.
-      </p>
-      <p class="small soft">
-        Made in Dublin by <a href={AUTHOR_URL}>Greg O'Brien</a>. Not affiliated with Xteink or the CrossPoint project.
-      </p>
-    </footer>
+    <div class="wrap">
+      <footer class="site-foot">
+        <p>Pocket Pages is free and open source, with the code <a href={GITHUB_URL}>on GitHub</a>. Books are converted in your browser and never uploaded.</p>
+        <p>Made in Dublin by <a href={AUTHOR_URL}>Greg O'Brien</a>. Not affiliated with Xteink or the CrossPoint project.</p>
+      </footer>
+    </div>
+    <div class="veil" data-veil aria-hidden="true"></div>
+
+    <script>
+      const root = document.documentElement;
+      const moon = document.querySelector<HTMLButtonElement>("[data-moon]")!;
+      const veil = document.querySelector<HTMLElement>("[data-veil]")!;
+      const reduced = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      const asleep = () => root.dataset.sleep === "1";
+      const label = () => {
+        const t = asleep() ? "Wake the page" : "Put the page to sleep";
+        moon.setAttribute("aria-label", t); moon.title = t; moon.setAttribute("aria-pressed", String(asleep()));
+      };
+      label();
+      moon.addEventListener("click", () => {
+        const next = !asleep();
+        const apply = () => {
+          if (next) root.dataset.sleep = "1"; else delete root.dataset.sleep;
+          try { localStorage.setItem("pp-sleep", next ? "1" : "0"); } catch (e) {}
+          label();
+        };
+        if (reduced()) { apply(); return; }
+        // one soft refresh: fade to the new paper, swap, fade back
+        veil.style.setProperty("--veil", next ? "#25272a" : "#e4e5e0");
+        veil.classList.add("on");
+        setTimeout(() => { apply(); veil.classList.remove("on"); }, 320);
+      });
+    </script>
   </body>
 </html>
 
 <style>
-  .skip:focus { position: fixed !important; top: 0.5rem; left: 0.5rem; width: auto; height: auto; clip: auto; padding: 0.5em 0.8em; background: var(--panel); z-index: 10; }
+  .skip:focus { position: fixed !important; top: 8px; left: 8px; width: auto; height: auto; clip: auto; padding: 8px 12px; background: var(--ik); color: var(--pa); z-index: 50; }
   .site-head {
-    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-    padding-top: 1.25rem; padding-bottom: 1.25rem; flex-wrap: wrap;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px;
+    padding: 24px 0 20px; border-bottom: 1px solid var(--fr);
   }
-  .mark { display: inline-flex; flex-direction: column; align-items: center; gap: 0.3rem; color: var(--ink); text-decoration: none; font-weight: 650; font-size: 1.15rem; letter-spacing: -0.01em; }
-  .mark-rule { width: 2.2rem; height: 2px; background: var(--ink); }
-  .mark:hover { color: var(--ink); }
-  nav { display: flex; gap: clamp(0.9rem, 2.5vw, 1.8rem); flex-wrap: wrap; }
-  nav a { color: var(--ink); text-decoration: none; font-size: 1rem; padding: 0.2em 0; border-bottom: 1.5px solid transparent; }
-  nav a:hover { color: var(--biro); border-bottom-color: var(--biro); }
-  nav a[aria-current="page"] { border-bottom-color: var(--ink); }
-  .site-foot { padding-top: 3rem; padding-bottom: 3rem; display: grid; gap: 0.8rem; }
-  .site-foot p { margin: 0; max-width: var(--measure); }
+  .mark { display: flex; flex-direction: column; align-items: center; gap: 7px; text-decoration: none; padding: 4px 6px; }
+  .mark-rule { width: 22px; height: 2px; background: currentColor; }
+  .mark span:last-child { font-size: 21px; font-weight: 600; line-height: 1; letter-spacing: -0.005em; }
+  nav { display: flex; align-items: center; gap: 4px; font-size: 17px; flex-wrap: wrap; }
+  nav a { padding: 4px 9px; text-decoration: none; }
+  nav a[aria-current="page"] { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; }
+  .moon {
+    margin-left: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--fr); border-radius: 50%; background: transparent; cursor: pointer; color: var(--ik);
+  }
+  .moon span { width: 15px; height: 15px; border-radius: 50%; box-shadow: inset -4px -2px 0 0 currentColor; transform: rotate(-20deg); }
+  .moon:hover, .moon:focus-visible { background: var(--ik); color: var(--pa); border-color: var(--ik); }
+  .site-foot {
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px 48px;
+    padding: 32px 0 48px; border-top: 1px solid var(--ik); font-size: 16px; line-height: 1.55; color: var(--gr);
+  }
+  .site-foot p { max-width: 34em; }
 </style>

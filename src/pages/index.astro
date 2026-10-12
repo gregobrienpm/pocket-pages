@@ -1,190 +1,192 @@
 ---
 import Base from "../layouts/Base.astro";
-import SleepFlip from "../components/SleepFlip.astro";
+import Device from "../components/Device.astro";
 import Converter from "../components/Converter.astro";
+import { MODELS, SAMPLE_OPEN } from "../lib/device.js";
 import { GITHUB_URL, FLASHER_URL, CROSSPOINT_URL } from "../site";
 
 const classics = [
-  { title: "Frankenstein", author: "Mary Shelley", pockets: 48, file: "frankenstein-pocket-pages.epub", size: "0.7 MB" },
-  { title: "Pride and Prejudice", author: "Jane Austen", pockets: 79, file: "pride-and-prejudice-pocket-pages.epub", size: "0.9 MB" },
-  { title: "Moby Dick", author: "Herman Melville", pockets: 149, file: "moby-dick-pocket-pages.epub", size: "1.5 MB" },
+  { title: "Frankenstein", line: "Mary Shelley. 48 pockets, about 7 weeks at one a day.", size: "0.7 MB", file: "frankenstein-pocket-pages.epub" },
+  { title: "Pride and Prejudice", line: "Jane Austen. 79 pockets, about 12 weeks at one a day.", size: "0.9 MB", file: "pride-and-prejudice-pocket-pages.epub" },
+  { title: "Moby Dick", line: "Herman Melville. 149 pockets, about 22 weeks at one a day.", size: "1.5 MB", file: "moby-dick-pocket-pages.epub" },
+];
+const builds = [
+  { label: "X3 and X4 build, experimental", file: "crosspoint-1.6.5-pocketpages-x3-x4.bin" },
+  { label: "X4 Pro build, experimental", file: "crosspoint-1.6.5-pocketpages-x4pro.bin" },
 ];
 ---
 <Base current="home">
-  <section class="hero wrap">
-    <div class="hero-text">
-      <h1>A whole book, six minutes at a time.</h1>
-      <p class="lead">
-        Pocket Pages cuts an EPUB into short reading sessions that stop at natural breaks.
-        It's made for the Xteink X4 running CrossPoint: when you finish a session, the reader
-        sleeps on a card that shows what comes next.
-      </p>
-      <p class="lead soft">Six minutes a day adds up to five or six novels a year.</p>
-      <div class="hero-actions">
-        <a class="button" href="#convert">Convert a book</a>
-        <a class="button quiet" href="#classics">Get a free classic</a>
+  <div class="wrap">
+    <section class="hero" id="top">
+      <div class="hero-text">
+        <h1>A whole book, six minutes at a time.</h1>
+        <p class="lead">Pocket Pages cuts an EPUB into short reading sessions that stop at natural breaks. It's made for Xteink readers running CrossPoint: when you finish a session, the reader sleeps on a card that shows what comes next.</p>
+        <p class="aside">Six minutes a day adds up to five or six novels a year.</p>
+        <div class="hero-actions">
+          <a class="btn" href="#convert">Convert a book</a>
+          <a class="textlink" href="#classics">Get a free classic</a>
+        </div>
       </div>
-    </div>
-    <div class="hero-device">
-      <SleepFlip />
-    </div>
-  </section>
+      <div class="hero-device">
+        <Device live autoSleep model="X4" class="hero-pd" />
+        <div class="switch" role="group" aria-label="Choose a reader">
+          <button type="button" aria-pressed="false" data-model="X3">X3</button>
+          <span aria-hidden="true" class="soft">·</span>
+          <button type="button" aria-pressed="true" data-model="X4">X4</button>
+        </div>
+        <span class="mono soft" data-caption>{MODELS.X4.caption}</span>
+      </div>
+    </section>
 
-  <section id="convert" class="band">
-    <div class="wrap">
-      <h2>Convert a book</h2>
-      <p class="prose intro">
-        Choose any DRM-free EPUB. You get back one file: the same book, arranged into pockets,
-        ready to copy to your reader.
-      </p>
+    <section id="convert" class="sec">
+      <div class="sec-head"><h2>Convert a book</h2><span class="folio">2</span></div>
+      <p class="intro">Choose any DRM-free EPUB. You get back one file: the same book, arranged into pockets, ready to copy to your reader.</p>
       <Converter />
-    </div>
-  </section>
+    </section>
 
-  <section class="wrap section" aria-labelledby="session-h">
-    <h2 id="session-h">How a session goes</h2>
-    <ol class="session">
-      <li>
-        <img src="/img/device-opener.webp" width="617" height="960" loading="lazy"
-          alt="The reader showing the start of a pocket: Pocket 2 of 61, 6 min read, Book 1, Chapter III, then the first lines of the chapter." />
-        <h3>Start</h3>
-        <p>Each pocket opens with a small card: which pocket, how long it takes, and where you are in the book. The page count at the bottom counts through this pocket only.</p>
-      </li>
-      <li>
-        <img src="/img/device-endcard.webp" width="645" height="960" loading="lazy"
-          alt="The end card: Pocket 1 complete, 1% read. Up next: Pocket 2, 6 min read, followed by the next pocket's first line in quotes." />
-        <h3>Finish</h3>
-        <p>About a dozen pages later the pocket ends at a chapter end or a scene break, never mid-paragraph. Turn one more page for the end card.</p>
-      </li>
-      <li>
-        <img src="/img/device-sleep.webp" width="618" height="960" loading="lazy"
-          alt="The same end card as a sleep screen, white text on a dark screen, with a small moon icon in the corner." />
-        <h3>Sleep</h3>
-        <p>Put the reader down. The end card stays as your sleep screen, so tomorrow's session is waiting the next time you pick it up.</p>
-      </li>
-    </ol>
-  </section>
+    <section class="sec" aria-labelledby="session-h">
+      <div class="sec-head"><h2 id="session-h">How a session goes</h2><span class="folio">3</span></div>
+      <ol class="session">
+        <li>
+          <div class="frame"><Device view="open" card={SAMPLE_OPEN} /></div>
+          <h3><span class="n">1</span>Start</h3>
+          <p>Each pocket opens with a small card: which pocket, how long it takes, and where you are in the book. The page count at the bottom counts through this pocket only.</p>
+        </li>
+        <li>
+          <div class="frame"><Device view="end" /></div>
+          <h3><span class="n">2</span>Finish</h3>
+          <p>About a dozen pages later the pocket ends at a chapter end or a scene break, never mid-paragraph. Turn one more page for the end card.</p>
+        </li>
+        <li>
+          <div class="frame"><Device view="sleep" /></div>
+          <h3><span class="n">3</span>Sleep</h3>
+          <p>Put the reader down. The end card stays as your sleep screen, so tomorrow's session is waiting the next time you pick it up.</p>
+        </li>
+      </ol>
+    </section>
 
-  <section id="classics" class="band">
-    <div class="wrap">
-      <h2>Start with a classic</h2>
-      <p class="prose intro">
-        Ready-made Pocket Pages editions of three novels, from the carefully produced, public-domain
-        books at <a href="https://standardebooks.org">Standard Ebooks</a>.
-      </p>
+    <section id="classics" class="sec">
+      <div class="sec-head"><h2>Start with a classic</h2><span class="folio">4</span></div>
+      <p class="intro">Ready-made Pocket Pages editions of three novels, from the carefully produced, public-domain books at <a href="https://standardebooks.org">Standard Ebooks</a>. One file works on both devices.</p>
       <ul class="shelf">
         {classics.map((b) => (
           <li>
             <div>
               <h3>{b.title}</h3>
-              <p class="soft">{b.author}. {b.pockets} pockets, about {Math.ceil(b.pockets / 7)} weeks at one a day.</p>
+              <span class="soft">{b.line}</span>
             </div>
-            <a class="button quiet" href={`/books/${b.file}`} download aria-label={`Download ${b.title}, ${b.size}`}>Download ({b.size})</a>
+            <a class="btn line" href={`/books/${b.file}`} download aria-label={`Download ${b.title}, ${b.size}`}>Download <span class="mono">{b.size}</span></a>
           </li>
         ))}
       </ul>
-    </div>
-  </section>
+    </section>
 
-  <section id="set-up" class="wrap section">
-    <h2>Set up your reader</h2>
-    <ol class="steps prose">
-      <li>
-        <h3>Install CrossPoint</h3>
-        <p>
-          Pocket Pages is built for <a href={CROSSPOINT_URL}>CrossPoint</a>, the free, open-source
-          firmware for the Xteink X4 and X4 Pro. Install it with
-          the <a href={FLASHER_URL}>CrossPoint web flasher</a>.
-        </p>
-      </li>
-      <li>
-        <h3>Turn on Quick Resume</h3>
-        <p>
-          On the reader, go to Settings, then Display, and set Sleep Screen to Quick Resume.
-          The reader then sleeps on the page you're reading, so finishing on an end card puts
-          the next pocket on your sleep screen.
-        </p>
-      </li>
-      <li>
-        <h3>Copy the book across</h3>
-        <p>Put the .epub on the reader's SD card and open it from the library. The table of contents lists every pocket with its length.</p>
-      </li>
-      <li>
-        <h3>Optional: the dark sleep screen</h3>
-        <p>
-          Standard CrossPoint shows the end card as it is, with every line in bold. For the flip to
-          white on black, and lighter lines under each heading, I wrote two small changes to CrossPoint:
-          a Quick Resume (Dark) sleep screen, and headings that keep regular weight when a book asks for it.
-          Until they're in an official CrossPoint release, the changes and an experimental build for the X4 Pro
-          are <a href={`${GITHUB_URL}/tree/main/firmware`}>on GitHub</a>. If you try the build, you can
-          always go back to standard CrossPoint with the web flasher.
-        </p>
-      </li>
-    </ol>
-  </section>
+    <section id="set-up" class="sec">
+      <div class="sec-head"><h2>Set up your reader</h2><span class="folio">5</span></div>
+      <ol class="steps">
+        <li>
+          <span class="n">1</span>
+          <div>
+            <h3>Install CrossPoint</h3>
+            <p>Pocket Pages is built for <a href={CROSSPOINT_URL}>CrossPoint</a>, the free, open-source firmware for the Xteink X3, X4 and X4 Pro. Install it with the <a href={FLASHER_URL}>CrossPoint web flasher</a>.</p>
+            <p class="note">Readers bought through Chinese retailers may be locked to Xteink's own firmware.</p>
+          </div>
+        </li>
+        <li>
+          <span class="n">2</span>
+          <div>
+            <h3>Turn on Quick Resume</h3>
+            <p>On the reader, go to Settings, then Display, and set Sleep Screen to Quick Resume. The reader then sleeps on the page you're reading, so finishing on an end card puts the next pocket on your sleep screen.</p>
+          </div>
+        </li>
+        <li>
+          <span class="n">3</span>
+          <div>
+            <h3>Copy the book across</h3>
+            <p>Put the .epub on the reader's SD card and open it from the library. The table of contents lists every pocket with its length.</p>
+          </div>
+        </li>
+        <li>
+          <span class="n">4</span>
+          <div>
+            <h3>Optional: the dark sleep screen</h3>
+            <p>Standard CrossPoint shows the end card as it is, with every line in bold. For the flip to white on black, and lighter lines under each heading, I wrote two small changes to CrossPoint: a Quick Resume (Dark) sleep screen, and headings that keep regular weight when a book asks for it. Until they're in an official CrossPoint release, the changes and an experimental build for each device are <a href={`${GITHUB_URL}/tree/main/firmware`}>on GitHub</a>. If you try the build, you can always go back to standard CrossPoint with the web flasher.</p>
+            <div class="builds">
+              {builds.map((b) => <a class="mono" href={`${GITHUB_URL}/raw/main/firmware/${b.file}`}>{b.label}</a>)}
+            </div>
+          </div>
+        </li>
+      </ol>
+    </section>
 
-  <section class="band">
-    <div class="wrap teaser">
-      <hr class="card-rule" />
+    <section class="why">
+      <span class="why-rule" aria-hidden="true"></span>
       <h2>Why six minutes?</h2>
-      <p class="prose">
-        Because it's short enough to do on a bad day and long enough to get somewhere. The maths
-        does the rest. The story covers the research behind it, what I heard from e-ink readers,
-        and how the end card went from a biro sketch to a sleep screen.
-      </p>
-      <p><a href="/story">Read the story</a></p>
-    </div>
-  </section>
+      <p>Because it's short enough to do on a bad day and long enough to get somewhere. The maths does the rest. The story covers the research behind it, what I heard from e-ink readers, and how the end card went from a biro sketch to a sleep screen.</p>
+      <a class="textlink" href="/story">Read the story</a>
+      <span class="folio">6</span>
+    </section>
+  </div>
 </Base>
+
+<script>
+  import { MODELS } from "../lib/device.js";
+  const btns = [...document.querySelectorAll<HTMLButtonElement>(".switch [data-model]")];
+  const caption = document.querySelector<HTMLElement>("[data-caption]")!;
+  btns.forEach((b) => b.addEventListener("click", () => {
+    const m = b.dataset.model as "X3" | "X4";
+    btns.forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    caption.textContent = MODELS[m].caption;
+    document.dispatchEvent(new CustomEvent("pp:model", { detail: m }));
+  }));
+</script>
 
 <style>
   .hero {
-    display: grid; gap: clamp(2rem, 5vw, 4rem); align-items: center;
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-    padding-top: clamp(1.5rem, 5vw, 4rem); padding-bottom: clamp(3rem, 7vw, 5.5rem);
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: 56px clamp(40px, 6vw, 96px);
+    padding: clamp(48px, 7vw, 112px) 0 clamp(64px, 8vw, 128px);
   }
-  .hero-text { max-width: 36rem; }
-  .hero h1 { margin-bottom: 1.4rem; }
-  .lead { font-size: var(--step-1); line-height: 1.5; }
-  .lead.soft { font-size: var(--step-0); }
-  .hero-actions { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 1.8rem; }
-  .hero-device { --device-w: clamp(220px, 26vw, 300px); justify-self: center; }
+  .hero-text { flex: 1 1 440px; min-width: 0; max-width: 660px; display: flex; flex-direction: column; gap: 28px; }
+  .hero h1 { font-size: clamp(46px, 6.6vw, 100px); line-height: 0.98; letter-spacing: -0.022em; font-variation-settings: "opsz" 72; }
+  .lead { font-size: clamp(19px, 1.5vw, 21px); line-height: 1.6; max-width: 34em; }
+  .aside { color: var(--gr); font-style: italic; }
+  .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; margin-top: 8px; }
+  .hero-device { flex: 0 1 360px; min-width: 0; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .hero-device :global(.hero-pd) { width: min(300px, 74vw); }
+  .switch { display: flex; align-items: center; gap: 2px; margin-top: 6px; font-family: var(--mono); font-size: 13px; }
+  .switch button { border: 0; padding: 6px 10px; cursor: pointer; font: inherit; background: transparent; color: var(--ik); }
+  .switch button[aria-pressed="true"], .switch button:hover { background: var(--ik); color: var(--pa); }
 
-  .band { background: var(--panel); padding: clamp(3rem, 7vw, 5rem) 0; }
-  .section { padding-top: clamp(3rem, 7vw, 5rem); padding-bottom: clamp(3rem, 7vw, 5rem); }
-  h2 { margin-bottom: 0.8rem; }
-  .intro { margin-bottom: 1.8rem; }
+  .sec { display: flex; flex-direction: column; gap: 28px; padding-bottom: clamp(72px, 9vw, 136px); }
+  .intro { max-width: 36em; }
 
-  .session {
-    list-style: none; counter-reset: s; margin: 2rem 0 0; padding: 0;
-    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(1.2rem, 3vw, 2.5rem);
-  }
-  .session li { counter-increment: s; }
-  .session img { width: 100%; aspect-ratio: 5 / 7.6; object-fit: cover; border-radius: 8px; background: var(--panel); }
-  .session h3 { margin: 1rem 0 0.4rem; display: flex; gap: 0.55rem; align-items: baseline; }
-  .session h3::before { content: counter(s); font-weight: 400; color: var(--ink-soft); }
-  .session p { font-size: 1rem; color: var(--ink-soft); }
+  .session { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 40px clamp(24px, 3vw, 44px); }
+  .session li { display: flex; flex-direction: column; gap: 16px; }
+  .frame { aspect-ratio: 4 / 5; background: var(--pr); border: 1px solid var(--fr); display: flex; align-items: center; justify-content: center; }
+  .frame :global(.pd) { width: 52%; }
+  .session h3 { font-size: 26px; font-weight: 500; line-height: 1.15; display: flex; gap: 12px; align-items: baseline; }
+  .session .n { font-size: 15px; color: var(--gr); }
+  .session p { font-size: 18px; }
 
-  .shelf { list-style: none; margin: 0; padding: 0; max-width: 46rem; border-top: 1px solid var(--line); }
-  .shelf li {
-    display: flex; justify-content: space-between; align-items: center; gap: 1rem 2rem; flex-wrap: wrap;
-    padding: 1.15rem 0; border-bottom: 1px solid var(--line);
-  }
-  .shelf h3 { margin-bottom: 0.15rem; }
-  .shelf p { margin: 0; font-size: 1rem; }
+  .shelf { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--ik); }
+  .shelf li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; padding: 22px 0; border-bottom: 1px solid var(--fr); }
+  .shelf li > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .shelf h3 { font-size: clamp(26px, 2.4vw, 32px); line-height: 1.15; }
+  .shelf .soft { font-size: 18px; }
 
-  .steps { list-style: none; counter-reset: st; padding: 0; margin: 2rem 0 0; display: grid; gap: 1.8rem; }
-  .steps li { counter-increment: st; display: grid; grid-template-columns: 2.2rem minmax(0, 1fr); column-gap: 0.4rem; }
-  .steps li::before { content: counter(st); grid-row: 1 / span 2; font-size: var(--step-1); line-height: 1.3; color: var(--ink-soft); }
-  .steps h3 { margin-bottom: 0.35rem; }
+  .steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .steps li { display: grid; grid-template-columns: minmax(40px, 72px) minmax(0, 1fr); gap: 0 clamp(12px, 2vw, 32px); padding: 26px 0; border-bottom: 1px solid var(--fr); }
+  @media (max-width: 600px) { .steps li { grid-template-columns: 34px minmax(0, 1fr); } }
+  .steps .n { font-size: clamp(32px, 3vw, 44px); line-height: 1; font-weight: 300; }
+  .steps li > div { display: flex; flex-direction: column; gap: 10px; max-width: 38em; }
+  .steps h3 { font-size: 26px; font-weight: 500; line-height: 1.2; }
+  .note { font-size: 17px; color: var(--gr); }
+  .builds { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+  .builds a { padding: 8px 12px; border: 1px solid var(--ik); text-decoration: none; font-size: 13px; }
 
-  .teaser { display: grid; gap: 1rem; justify-items: start; }
-  .teaser h2 { margin: 0.6rem 0 0; }
-  .teaser p { margin: 0; }
-
-  @media (max-width: 760px) {
-    .hero { grid-template-columns: 1fr; }
-    .hero-device { --device-w: min(62vw, 250px); }
-    .session { grid-template-columns: 1fr; max-width: 24rem; }
-  }
+  .why { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 22px; padding-bottom: clamp(80px, 10vw, 144px); }
+  .why-rule { width: 40px; height: 2px; background: var(--ik); margin-bottom: 12px; }
+  .why h2 { font-size: clamp(34px, 3.8vw, 54px); line-height: 1.05; letter-spacing: -0.015em; }
+  .why p { max-width: 32em; }
 </style>

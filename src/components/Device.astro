@@ -1,0 +1,148 @@
+---
+// A pixel-true Xteink reader. Static by default; `live` makes it respond to
+// the X3/X4 switch and (with `autoSleep`) go to sleep once after load.
+import { MODELS, HERO_CARD, screenHTML, deviceLabel } from "../lib/device.js";
+interface Props {
+  model?: "X3" | "X4";
+  view?: "end" | "sleep" | "open";
+  card?: Record<string, unknown>;
+  live?: boolean;
+  autoSleep?: boolean;
+  id?: string;
+  class?: string;
+}
+const { model = "X4", view = "end", card, live = false, autoSleep = false, id, class: cls } = Astro.props;
+const asleep = view === "sleep";
+const c = card ?? (view === "open" ? undefined : HERO_CARD);
+const m = MODELS[model];
+---
+<div class:list={["pd", cls]} id={id} data-model={model} data-asleep={asleep ? "1" : "0"} data-live={live ? "1" : undefined} data-auto={autoSleep ? "1" : undefined}
+  style={`--bezel:${m.bezel}; --s:${m.scale}`}>
+  <div class="pd-bezel" role="img" aria-label={deviceLabel(model, c, asleep)} tabindex={autoSleep ? 0 : undefined}>
+    <div class="pd-screen" style={`aspect-ratio:${m.aspect}`}>
+      <div class="pd-content" set:html={screenHTML(c, asleep)} />
+      <div class="pd-flash" aria-hidden="true"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { MODELS, HERO_CARD, screenHTML, deviceLabel } from "../lib/device.js";
+
+  const reduced = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+  // One controller per drawn device; reachable as element.pp
+  class Reader {
+    el: HTMLElement; bezel: HTMLElement; screen: HTMLElement; content: HTMLElement; flash: HTMLElement;
+    model: "X3" | "X4"; asleep: boolean; card: any; timers: number[] = [];
+    constructor(el: HTMLElement) {
+      this.el = el;
+      this.bezel = el.querySelector(".pd-bezel")!;
+      this.screen = el.querySelector(".pd-screen")!;
+      this.content = el.querySelector(".pd-content")!;
+      this.flash = el.querySelector(".pd-flash")!;
+      this.model = (el.dataset.model as "X3" | "X4") || "X4";
+      this.asleep = el.dataset.asleep === "1";
+      this.card = HERO_CARD;
+    }
+    later(fn: () => void, ms: number) { this.timers.push(window.setTimeout(fn, ms)); }
+    clear() { this.timers.forEach(clearTimeout); this.timers = []; this.setFlash(0); }
+    setFlash(f: number) { this.flash.dataset.f = String(f); }
+    draw() {
+      const m = MODELS[this.model];
+      this.el.dataset.model = this.model;
+      this.el.dataset.asleep = this.asleep ? "1" : "0";
+      this.el.style.setProperty("--bezel", m.bezel);
+      this.el.style.setProperty("--s", String(m.scale));
+      this.screen.style.aspectRatio = m.aspect;
+      this.content.innerHTML = screenHTML(this.card, this.asleep);
+      this.bezel.setAttribute("aria-label", deviceLabel(this.model, this.card, this.asleep));
+    }
+    /** A full e-ink refresh: black, white, black, then the new image. Two flashes, once per action. */
+    refresh(apply?: () => void) {
+      if (reduced()) { apply?.(); this.draw(); return; }
+      this.setFlash(1);
+      this.later(() => this.setFlash(2), 120);
+      this.later(() => this.setFlash(3), 240);
+      this.later(() => { apply?.(); this.draw(); this.setFlash(0); }, 360);
+    }
+    /** A page turn: a faint partial-refresh flicker. */
+    flicker(apply?: () => void) {
+      apply?.(); this.draw();
+      if (reduced()) return;
+      this.setFlash(4);
+      this.later(() => this.setFlash(5), 70);
+      this.later(() => this.setFlash(0), 150);
+    }
+    setModel(model: "X3" | "X4") { if (model !== this.model) this.refresh(() => { this.model = model; }); }
+    setCard(card: any, turn = false) { const apply = () => { this.card = card; this.asleep = false; }; turn ? this.flicker(apply) : this.refresh(apply); }
+    sleepCycle() {
+      this.clear();
+      if (this.asleep) {
+        this.refresh(() => { this.asleep = false; });
+        this.later(() => this.refresh(() => { this.asleep = true; }), 2200);
+      } else this.refresh(() => { this.asleep = true; });
+    }
+  }
+
+  for (const el of document.querySelectorAll<HTMLElement>(".pd[data-live]")) {
+    const r = new Reader(el);
+    (el as any).pp = r;
+    if (el.dataset.auto) {
+      r.later(() => r.refresh(() => { r.asleep = true; }), 2200);
+      const tap = () => r.sleepCycle();
+      r.bezel.addEventListener("click", tap);
+      r.bezel.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tap(); } });
+      r.bezel.style.cursor = "pointer";
+    }
+    document.addEventListener("pp:model", (e) => r.setModel((e as CustomEvent).detail));
+  }
+</script>
+
+<style is:global>
+  .pd { width: 100%; display: flex; justify-content: center; }
+  .pd-bezel {
+    width: var(--bezel, 100%);
+    background: #2b2d2f; border-radius: 22px; padding: 7% 6.5% 15% 6.5%;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 22px 44px -22px rgba(30, 32, 34, 0.55);
+  }
+  :root[data-sleep="1"] .pd-bezel { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 0 0 1px #45484a, 0 22px 44px -22px rgba(0, 0, 0, 0.7); }
+  .pd-bezel:focus-visible { outline: 2px solid var(--ik); outline-offset: 4px; background: #2b2d2f; }
+  .pd-screen {
+    position: relative; width: 100%; overflow: hidden; border-radius: 2px;
+    container-type: inline-size; font-family: var(--device);
+    background: #e4e5e0; color: #1e2022;
+  }
+  .pd[data-asleep="1"] .pd-screen { background: #1e2022; color: #e3e4df; }
+  .pd-content, .pd-page { position: absolute; inset: 0; }
+  .pd-page { display: flex; flex-direction: column; font-size: calc(5.4cqw * var(--s, 1)); line-height: 1.45; }
+
+  /* End card: the layout the EPUB produces (rule, two lines, rule, two lines, rule, quote) */
+  .pd-card { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 30cqw 6cqw 0; }
+  .pd-card b { font-weight: 700; }
+  .pd[data-asleep="1"] .pd-card span, .pd-card span { font-weight: 400; }
+  .pd-card i { font-style: italic; text-wrap: balance; }
+  .pd-rule { display: block; width: 24cqw; height: max(1px, 0.42cqw); background: currentColor; margin: 2.6cqw 0 2cqw; }
+
+  /* Opening card, then the first lines of the pocket */
+  .pd-open { padding: 4cqw 6.5cqw 0; }
+  .pd-head { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .pd-head b { font-weight: 700; }
+  .pd-body { flex: 1; overflow: hidden; margin-top: 4cqw; text-align: justify; hyphens: auto; }
+  .pd-body p { margin: 0; text-indent: 1.4em; }
+  .pd-body p:first-child { text-indent: 0; }
+
+  .pd-status {
+    display: flex; align-items: center; justify-content: space-between; gap: 3cqw;
+    font-size: calc(2.7cqw * var(--s, 1)); line-height: 1; padding: 2.4cqw 3cqw 2.6cqw;
+  }
+  .pd-open .pd-status { margin: 0 -6.5cqw; }
+  .pd-chap { flex: 1; text-align: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .pd-moon { width: 5.5cqw; height: 5.5cqw; flex: none; }
+
+  .pd-flash { position: absolute; inset: 0; pointer-events: none; background: transparent; opacity: 0; }
+  .pd-flash[data-f="1"], .pd-flash[data-f="3"] { background: #1e2022; opacity: 1; }
+  .pd-flash[data-f="2"] { background: #f1f1ed; opacity: 1; }
+  .pd-flash[data-f="4"] { background: #1e2022; opacity: 0.5; }
+  .pd-flash[data-f="5"] { background: #1e2022; opacity: 0.16; }
+</style>
